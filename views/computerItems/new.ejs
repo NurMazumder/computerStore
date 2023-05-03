@@ -1,0 +1,19 @@
+<% layout('layout/boilerplate') %>
+
+    <body>
+        <div class="container">
+            <form action="/computerItems" method="POST">
+                <h1 class="mb-4">ADD NEW</h1>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="computerItems[name]">
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price</label>
+                    <input type="number" class="form-control" id="price" name="computerItems[price]">
+                </div>
+                <button class="btn btn-primary">Add Item</button>
+            </form>
+            <a href="/computerItems" class="mt-3 d-block">Back to All Items</a>
+        </div>
+    </body>

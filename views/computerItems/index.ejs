@@ -1,0 +1,42 @@
+<% layout('layout/boilerplate') %>
+    <h1>COMPUTER ITEMS</h1>
+    <div>
+        <a href="/computerItems/new">Add Item</a>
+    </div>
+
+    <div class="row">
+        <% let currentType='' ; %>
+            <% for (let item of computerItems) { %>
+                <% if (item.type !==currentType) { %>
+                    <% if (currentType !=='' ) { %>
+    </div> <!-- Closing the previous row -->
+    <% } %>
+        <div class="row mt-5">
+            <div class="col">
+                <h2>
+                    <%= item.type.toUpperCase() %>
+                </h2>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <% } %>
+                <div class="col-md-3">
+                    <a href="/computerItems/<%= item._id %>">
+                        <div class="card mb-4">
+                            <div class="card-image">
+                                <img src="<%= item.imgURL %>" class="card-img-top img-fluid square-image"
+                                    alt="<%= item.name %>">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <%= item.name %>
+                                </h5>
+                                <p class="card-text">$<%= item.price %>
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <% currentType=item.type; %>
+                    <% } %>
+        </div>

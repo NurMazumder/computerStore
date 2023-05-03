@@ -1,0 +1,29 @@
+<% layout('layout/boilerplate') %>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="<%= computerItem.imgURL %>" alt="<%= computerItem.name %>" class="img-fluid border">
+            </div>
+            <div class="col-md-6">
+                <h1>
+                    <%= computerItem.name %>
+                </h1>
+                <h1>$<%= computerItem.price %>
+                </h1>
+                <p><a href="/computerItems/<%= computerItem._id %>/edit" class="btn btn-secondary">Edit</a></p>
+                <p>
+                <form action="/computerItems/<%= computerItem._id %>?_method=DELETE" method="POST">
+                    <button class="btn btn-danger">DELETE</button>
+                </form>
+                </p>
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class="col">
+                <footer>
+                    <a href="/computerItems" class="btn btn-primary">All Items</a>
+                </footer>
+            </div>
+        </div>
+    </div>

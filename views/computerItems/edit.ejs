@@ -1,0 +1,17 @@
+<% layout('layout/boilerplate') %>
+
+    <h1>EDIT</h1>
+    <form action="/computerItems/<%= computerItem._id %>?_method=PUT" method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="computerItems[name]"
+                value="<%= computerItem.name %>">
+        </div>
+        <div class="mb-3">
+            <label for="price" class="form-label">Price</label>
+            <input type="number" class="form-control" id="price" name="computerItems[price]"
+                value="<%= computerItem.price %>">
+        </div>
+        <button class="btn btn-primary">Update Item</button>
+    </form>
+    <a href="/computerItems/<%= computerItem._id %>" class="mt-3 d-block">Back to Item</a>
