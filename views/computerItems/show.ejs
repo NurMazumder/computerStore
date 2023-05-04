@@ -14,7 +14,10 @@
                 <p><a href="/computerItems/<%= computerItem._id %>/edit" class="btn btn-secondary">Edit</a></p>
                 <p>
                 <form action="/computerItems/<%= computerItem._id %>?_method=DELETE" method="POST">
-                    <button class="btn btn-danger">DELETE</button>
+                    <button class="btn btn-danger">Delete</button>
+                </form>
+                <form action="/cart">
+                    <button class="btn btn-primary">Add to Cart</button>
                 </form>
                 </p>
             </div>
@@ -22,7 +25,7 @@
         <div class="row mt-5">
             <div class="col">
                 <footer>
-                    <a href="/computerItems" class="btn btn-primary">All Items</a>
+                    <a href="/computerItems">Back to All Items</a>
                 </footer>
             </div>
         </div>

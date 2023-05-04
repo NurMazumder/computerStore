@@ -2,7 +2,12 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate');
+const bcrypt = require('bcryptjs');
 const methodOverride = require('method-override');
+
+const JWT = require('json-web-token');
+JWT_SECRET = // JWT secret key
+"eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY4MzIxNDcxNCwiaWF0IjoxNjgzMjE0NzE0fQ.TzN548etvt_18eFFFSwm7V6kItQKDWYUbDfWueSEoDY"; 
 
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
 
@@ -78,41 +83,67 @@ app.get('/builder', async (req, res) => {
 })
 
 app.get('/register', (req, res) => {
-    res.render('register')
+    res.render('userInfo/register')
 })
 
-const User = require("./models/userSchema");
+require("./models/userSchema");
+const User = mongoose.model("UserInfo")
 
 app.post('/register', async(req, res) => { 
+    const {name, email, phone, password} = req.body;
     try {
-        const {email} = req.body;
         const oldUser = await User.findOne( { email } )
         if(oldUser){
             return res.send( {error: "User already exists with this email address."} );
         }
-        newUser = new User(req.body);
+        newUser = new User({
+            name,
+            email,
+            phone,
+            password,
+        });
         await newUser.save();
-        console.log(req.body);
-        console.log(newUser);
+        console.log({ name, email, phone, password });
         res.redirect("/login");
-    } 
+    }
     catch (error){
         res.send({status: "Something went wrong. Try again."});
     }
 });
 
 app.get('/login', async (req, res) => {
-    res.render('login')
+    res.render('userInfo/login')
 }) 
 
 app.post('/login', async (req, res) => {
-    res.send("Logging in...")
-}) 
+    const {email, password} = req.body;
+    const existingUser = await User.findOne({ email });
+    console.log(req.body);
+    console.log(existingUser);
+    if(!existingUser){
+        return res.send( {error: "User not found with this email address."} );
+    }
+    if(await bcrypt.compare(password, existingUser.password)){
+        const token = JWT.sign({}, JWT_SECRET);
+        if(res.status(201)){
+            console.log({ email, encryptedPassword });
+            res.redirect("/");
+        }
+        else{
+            return res.send({error: "An error occurred. Please try again."});
+        }
+    }
+    res.send({error: "Invalid password. Please change your password and try again."});
+}); 
 
 app.listen(3000, () => {
     console.log('Working 3000')
 })
 
 app.get('/forgot-password', (req, res) => {
-    res.render('forgotPassword')
+    res.render('userInfo/forgotPassword')
+})
+
+app.get('/cart', (req, res) => {
+    res.render('shopping/cart')
 })

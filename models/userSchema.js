@@ -10,5 +10,4 @@ const userDetailSchema = new mongoose.Schema(
     { collection: "UserInfo" }
 );
 
-
 module.exports = mongoose.model("UserInfo", userDetailSchema);
