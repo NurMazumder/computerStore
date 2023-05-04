@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const ComputerItems = require('../models/computerStore');
+const Users = require('../models/userSchema');
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
 
 const db = mongoose.connection;
@@ -9,6 +10,7 @@ db.once("open", () => {
 });
 
 const components = require('./components');
+const users = require('./users');
 
 const seedDB = async () => {
     try {
@@ -22,6 +24,16 @@ const seedDB = async () => {
                 imgURL: comp.imgURL
             });
             await item.save();
+        }
+        await Users.deleteMany({});
+        for (let person of users) {
+            const User = new Users({
+                name: person.name,
+                email: person.email,
+                phone: person.phone,
+                password: person.password
+            });
+            await User.save();
         }
         console.log('Data seeded successfully');
         process.exit(0);

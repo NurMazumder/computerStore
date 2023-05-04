@@ -6,7 +6,7 @@
 
     <div class="row">
         <% let currentType='' ; %>
-            <% for (let item of computerItems) { %>
+            <% for (let item of computerItem) { %>
                 <% if (item.type !==currentType) { %>
                     <% if (currentType !=='' ) { %>
     </div> <!-- Closing the previous row -->
@@ -14,7 +14,9 @@
         <div class="row mt-5">
             <div class="col">
                 <h2>
+                    <% if (item.type != null){ %>
                     <%= item.type.toUpperCase() %>
+                    <% } %>
                 </h2>
             </div>
         </div>

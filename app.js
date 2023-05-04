@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
 
-const ComputerItems = require('./models/computerStore');
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
 
 const db = mongoose.connection;
@@ -21,14 +20,15 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
+const ComputerItems = require('./models/computerStore');
 
 app.get('/', (req, res) => {
     res.render('home')
 })
 
 app.get('/computerItems', async (req, res) => {
-    const computerItems = await ComputerItems.find({});
-    res.render('computerItems/index', { computerItems })
+    const computerItem = await ComputerItems.find({});
+    res.render('computerItems/index', { computerItem })
 })
 
 app.get('/computerItems/new', (req, res) => {
@@ -73,7 +73,46 @@ app.delete('/computerItems/:id', async (req, res) => {
     res.redirect(`/computerItems`);
 })
 
+app.get('/builder', async (req, res) => {
+    res.render('builder')
+})
+
+app.get('/register', (req, res) => {
+    res.render('register')
+})
+
+const User = require("./models/userSchema");
+
+app.post('/register', async(req, res) => { 
+    try {
+        const {email} = req.body;
+        const oldUser = await User.findOne( { email } )
+        if(oldUser){
+            return res.send( {error: "User already exists with this email address."} );
+        }
+        newUser = new User(req.body);
+        await newUser.save();
+        console.log(req.body);
+        console.log(newUser);
+        res.redirect("/login");
+    } 
+    catch (error){
+        res.send({status: "Something went wrong. Try again."});
+    }
+});
+
+app.get('/login', async (req, res) => {
+    res.render('login')
+}) 
+
+app.post('/login', async (req, res) => {
+    res.send("Logging in...")
+}) 
 
 app.listen(3000, () => {
     console.log('Working 3000')
+})
+
+app.get('/forgot-password', (req, res) => {
+    res.render('forgotPassword')
 })
