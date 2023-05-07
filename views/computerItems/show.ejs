@@ -3,29 +3,79 @@
     <div class="container">
         <div class="row">
             <div class="col-md-6">
-                <img src="<%= computerItem.imgURL %>" alt="<%= computerItem.name %>" class="img-fluid border">
+                <div class="d-flex flex-column justify-content-between" style="height: 100%;">
+                    <div>
+                        <img src="<%= computerItem.imgURL %>" alt="<%= computerItem.name %>"
+                            class="img-fluid border mb-3">
+                        <h1>
+                            <%= computerItem.name %>
+                        </h1>
+                        <h1>$<%= computerItem.price %>
+                        </h1>
+                    </div>
+                    <div class="d-flex">
+                        <% if (currentUser && currentUser.role==='admin' ) { %>
+                            <a href="/computerItems/<%= computerItem._id %>/edit"
+                                class="btn btn-secondary mb-0 me-2">Edit</a>
+                            <form action="/computerItems/<%= computerItem._id %>?_method=DELETE" method="POST">
+                                <button class="btn btn-danger">Delete</button>
+                            </form>
+                            <% } %>
+                    </div>
+                </div>
             </div>
             <div class="col-md-6">
-                <h1>
-                    <%= computerItem.name %>
-                </h1>
-                <h1>$<%= computerItem.price %>
-                </h1>
-                <p><a href="/computerItems/<%= computerItem._id %>/edit" class="btn btn-secondary">Edit</a></p>
-                <p>
-                <form action="/computerItems/<%= computerItem._id %>?_method=DELETE" method="POST">
-                    <button class="btn btn-danger">Delete</button>
+                <form action="/computerItems/<%= computerItem._id %>/reviews" method="POST" novalidate
+                    class="mb-3 validated-form">
+                    <h2>Review</h2>
+                    <div class="mb-3">
+                        <label class="form-label" for="rating">Rating</label>
+                        <input type="range" min="1" max="5" name="review[rating]" id="rating" class="form-range">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="body">Comment</label>
+                        <textarea class="form-control" name="review[body]" id="body" cols="30" rows="3"
+                            required></textarea>
+                    </div>
+                    <button class="btn btn-success">Submit</button>
                 </form>
-                <form action="/cart">
-                    <button class="btn btn-primary">Add to Cart</button>
-                </form>
-                </p>
+                <div class="col-md-6">
+                    <h2>Reviews</h2>
+                    <% for (let review of computerItem.reviews) { %>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"
+                                    style="<%= review.rating < 3 ? 'border: 2px solid red' : 'border: 2px solid green' %>">
+                                    Rating: <%= review.rating %>
+                                </h5>
+                                <p class="card-text">
+                                    <% if (review.author) { %>
+                                        Author: <%= review.author.username %><br>
+                                            <% } else { %>
+                                                Author: visitor<br>
+                                                <% } %>
+                                                    Review: <%= review.body %>
+                                                        <% if (currentUser && currentUser.role==='admin' ) { %>
+                                                            <form
+                                                                action="/computerItems/<%=computerItem._id%>/reviews/<%=review._id%>?_method=DELETE"
+                                                                method="POST">
+                                                                <button class="btn btn-sm btn-danger">Delete</button>
+                                                            </form>
+                                                            <% } %>
+                                </p>
+                            </div>
+                        </div>
+                        <% } %>
+                </div>
+
+
             </div>
         </div>
-        <div class="row mt-5">
+
+        <div class=" row mt-5">
             <div class="col">
                 <footer>
-                    <a href="/computerItems">Back to All Items</a>
+                    <a href="/computerItems" class="btn btn-primary">All Items</a>
                 </footer>
             </div>
         </div>

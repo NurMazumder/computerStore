@@ -4,41 +4,43 @@
         <a href="/computerItems/new">Add Item</a>
     </div>
 
-    <div class="row">
-        <% let currentType='' ; %>
-            <% for (let item of computerItem) { %>
-                <% if (item.type !==currentType) { %>
-                    <% if (currentType !=='' ) { %>
-    </div> <!-- Closing the previous row -->
-    <% } %>
-        <div class="row mt-5">
-            <div class="col">
-                <h2>
-                    <% if (item.type != null){ %>
-                    <%= item.type.toUpperCase() %>
-                    <% } %>
-                </h2>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <% } %>
-                <div class="col-md-3">
-                    <a href="/computerItems/<%= item._id %>">
-                        <div class="card mb-4">
-                            <div class="card-image">
-                                <img src="<%= item.imgURL %>" class="card-img-top img-fluid square-image"
-                                    alt="<%= item.name %>">
+    <% let types={ motherboard: [], CPU: [], FAN: [], PSU: [], MEMORY: [], STORAGE: [], GPU: [], CASE: [], OPERATING:
+        [], MONITOR: [] }; %>
+
+        <% for (let item of computerItems) { %>
+            <% types[item.type].push(item); %>
+                <% } %>
+
+                    <% for (let type in types) { %>
+                        <% if (types[type].length> 0) { %>
+                            <div class="row mt-5">
+                                <div class="col">
+                                    <h2>
+                                        <%= type.toUpperCase() %>
+                                    </h2>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <%= item.name %>
-                                </h5>
-                                <p class="card-text">$<%= item.price %>
-                                </p>
+                            <div class="row mt-3">
+                                <% for (let item of types[type]) { %>
+                                    <div class="col-md-3">
+                                        <a href="/computerItems/<%= item._id %>">
+                                            <div class="card mb-4">
+                                                <div class="card-image">
+                                                    <img src="<%= item.imgURL %>"
+                                                        class="card-img-top img-fluid square-image"
+                                                        alt="<%= item.name %>">
+                                                </div>
+                                                <div class="card-body">
+                                                    <h5 class="card-title">
+                                                        <%= item.name %>
+                                                    </h5>
+                                                    <p class="card-text">$<%= item.price %>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <% } %>
                             </div>
-                        </div>
-                    </a>
-                </div>
-                <% currentType=item.type; %>
-                    <% } %>
-        </div>
+                            <% } %>
+                                <% } %>

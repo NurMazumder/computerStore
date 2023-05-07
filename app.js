@@ -1,10 +1,23 @@
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+const catchAsync = require('./utils/catchAsync');
+const ExpressError = require('./utils/ExpressError');
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
+const Review = require('./models/review');
+const filterBadWords = require('./utils/filterBadWords');
+const session = require('express-session');
+const flash = require('connect-flash');
+const ComputerItems = require('./models/computerStore');
+const passport = require('passport');
+const LocalStrategy = require('passport-local'); // <-- here
+const User = require('./models/user');
+const { isLoggedIn } = require('./middleware');
+
 
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
+
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -19,58 +32,161 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const ComputerItems = require('./models/computerStore');
+const sessionConfig = {
+    secret: 'thisshouldbeabettersecret!',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+}
+app.use(session(sessionConfig))
+app.use(flash());
+// user authenitication
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate())); // <-- here
+
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+//flash 
+app.use((req, res, next) => {
+    console.log(req.session)
+    res.locals.currentUser = req.user;
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
+
 
 app.get('/', (req, res) => {
     res.render('home')
 })
 
-app.get('/computerItems', async (req, res) => {
-    const computerItem = await ComputerItems.find({});
-    res.render('computerItems/index', { computerItem })
-})
+// computer Items
 
-app.get('/computerItems/new', (req, res) => {
+app.get('/computerItems', catchAsync(async (req, res) => {
+    const computerItems = await ComputerItems.find({});
+    res.render('computerItems/index', { computerItems })
+}))
+
+app.get('/computerItems/new', isLoggedIn, (req, res) => {
     res.render('computerItems/new');
 })
 
-app.post('/computerItems', async (req, res) => {
+app.post('/computerItems', catchAsync(async (req, res) => {
     const computerItem = new ComputerItems(req.body.computerItems);
     await computerItem.save();
+    req.flash('success', 'Successfully Created');
     res.redirect(`/computerItems/${computerItem._id}`);
-});
+}));
 
 
 app.get('/computerItems/:id', async (req, res) => {
-    try {
-        const computerItem = await ComputerItems.findById(req.params.id);
-        if (!computerItem) {
-            // Handle case when the item with the specified ID is not found
-            return res.status(404).send('Computer item not found');
+    const computerItem = await ComputerItems.findById(req.params.id).populate({
+        path: 'reviews',
+        populate: {
+            path: 'author'
         }
-        res.render('computerItems/show', { computerItem });
-    } catch (error) {
-        // Handle any potential errors during the database query
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-})
+    });
+    res.render('computerItems/show', { computerItem });
 
-app.get('/computerItems/:id/edit', async (req, res) => {
+});
+
+app.get('/computerItems/:id/edit', isLoggedIn, catchAsync(async (req, res) => {
     const computerItem = await ComputerItems.findById(req.params.id);
     res.render('computerItems/edit', { computerItem });
 
-})
-app.put('/computerItems/:id', async (req, res) => {
+}));
+
+app.put('/computerItems/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     const computerItem = await ComputerItems.findByIdAndUpdate(id, { ...req.body.computerItems });
+    req.flash('success', 'Successfully updated');
     res.redirect(`/computerItems/${computerItem._id}`);
-})
-app.delete('/computerItems/:id', async (req, res) => {
+}));
+
+app.delete('/computerItems/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
     const computerItem = await ComputerItems.findByIdAndDelete(id);
     res.redirect(`/computerItems`);
+}));
+
+
+
+// review for compter Items
+
+app.post('/computerItems/:id/reviews', catchAsync(async (req, res) => {
+    const computerItem = await ComputerItems.findById(req.params.id);
+    const review = new Review(req.body.review);
+    if (req.isAuthenticated()) {
+        review.author = req.user._id;
+    } else {
+        review.author = null;
+    }
+    review.body = filterBadWords(review.body); // Filter bad words in the comment
+    computerItem.reviews.push(review);
+    await review.save();
+    await computerItem.save();
+    res.redirect(`/computerItems/${computerItem._id}`);
+}));
+
+
+app.delete('/computerItems/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+    const { id, reviewId } = req.params;
+    await ComputerItems.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/computerItems/${id}`);
+}))
+
+
+//User register/Login
+app.get('/register', (req, res) => {
+    res.render('users/register');
+})
+app.post('/register', catchAsync(async (req, res, next) => {
+    try {
+        const { email, username, password } = req.body;
+        const user = new User({ email, username });
+        const registeredUser = await User.register(user, password);
+        req.login(registeredUser, err => {
+            if (err) return next(err);
+            req.flash('success', 'Welcome!');
+            res.redirect('/computerItems');
+        })
+    } catch (e) {
+        req.flash('error', e.message);
+        res.redirect('/register');
+    }
+
+}));
+
+app.get('/login', (req, res) => {
+    res.render('users/login');
+})
+
+app.post('/login', passport.authenticate('local', { failureFlash: true, failureRedirect: '/login' }), (req, res) => {
+    req.flash('success', 'welcome back!');
+    // const redirectUrl = req.session.returnTo || '/computerItems';
+    // delete req.session.returnTo;
+    // res.redirect(redirectUrl);
+    res.redirect('/computerItems');
+});
+
+app.get('/logout', (req, res) => {
+    req.logout(function (err) {
+        if (err) {
+            return next(err);
+        }
+        req.flash('success', 'Goodbye!');
+        res.redirect('/computerItems');
+    });
 })
 
 const computerBuilds = require('./models/computerBuild');
@@ -111,13 +227,19 @@ app.post('/builds', async(req, res) => {
     newBuild.price = total;
     newBuild.buildImg = housing[0].imgURL;
     await newBuild.save();
+    req.flash('success', 'Successfully Created');
 
     res.redirect(`/builds/${newBuild._id}`);
 });
 
 app.get('/builds/:id', async (req, res) => {
     try {
-        const computerBuild = await computerBuilds.findById(req.params.id);
+        const computerBuild = await computerBuilds.findById(req.params.id).populate({
+            path: 'reviews',
+            populate: {
+                path: 'author'
+            }
+        });;
         if (!computerBuild) {
             return res.status(404).send('Build not found. Please try again');
         }
@@ -134,80 +256,40 @@ app.delete('/computerBuilds/:id', async (req, res) => {
     res.redirect(`/builds`);
 })
 
-app.get('/register', (req, res) => {
-    res.render('userInfo/register')
+app.post('/builds/:id/reviews', catchAsync(async (req, res) => {
+    const computerBuild = await computerBuilds.findById(req.params.id);
+    const review = new Review(req.body.review);
+    if (req.isAuthenticated()) {
+        review.author = req.user._id;
+    } else {
+        review.author = null;
+    }
+    review.body = filterBadWords(review.body); // Filter bad words in the comment
+    computerBuild.reviews.push(review);
+    await review.save();
+    await computerBuild.save();
+    res.redirect(`/builds/${computerBuild._id}`);
+}));
+
+
+app.delete('/builds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+    const { id, reviewId } = req.params;
+    await ComputerBuilds.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/builds/${id}`);
+}))
+
+
+app.all('*', (req, res, next) => {
+    next(new ExpressError('Page Not Found', 404))
 })
 
-require("./models/userSchema");
-const User = mongoose.model("UserInfo")
-
-app.post('/register', async(req, res) => { 
-    const {name, email, phone, password} = req.body;
-    try {
-        const oldUser = await User.findOne( { email } );
-        if(oldUser){
-            return res.send( {error: "User already exists with this email address."} );
-        }
-        newUser = new User({
-            name,
-            email,
-            phone,
-            password,
-        });
-        await newUser.save();
-        console.log({ name, email, phone, password });
-        res.redirect("/login");
-    }
-    catch (error){
-        res.send({status: "Something went wrong. Try again."});
-    }
-});
-
-app.get('/login', async (req, res) => {
-    res.render('userInfo/login')
-}) 
-
-app.post('/login', async (req, res) => {
-    const existingUser = await User.findById({_id: '64557547bfe0ef11be57812d'});
-    const userPass = await User.findById({_id: '64557547bfe0ef11be57812d'}).password;
-    console.log(req.body);
-    console.log(existingUser);
-    if(!existingUser){
-        return res.send( {error: "User not found with this email address."} );
-    }
-    const result = req.body.password === userPass;
-    console.log(result);
-    if(result){
-        if(res.status(201)){
-            if(existingUser.name === 'admin'){
-                res.redirect('/users/admin');
-            }
-            else{
-                res.redirect(`/users/${_id}`);
-            }
-
-        }
-        else{
-            return res.send({error: "An error occurred. Please try again."});
-        }
-    }
-    else{
-        res.send({error: "Invalid password. Please input the correct password and try again."});
-    }
-}); 
-
-app.get('/users/admin', (req, res) => {
-    res.render('userInfo/admin');
-});
-
-app.get('/users/admin', (req, res) => {
-    res.render('admin');
-});
+app.use((err, req, res, next) => {
+    const { statusCode = 500 } = err;
+    if (!err.message) err.message = 'Oh No, Something Went Wrong!'
+    res.status(statusCode).render('error', { err })
+})
 
 app.listen(3000, () => {
     console.log('Working 3000')
-})
-
-app.get('/cart', (req, res) => {
-    res.render('shopping/cart')
 })

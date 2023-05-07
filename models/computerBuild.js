@@ -41,7 +41,23 @@ const computerBuildSchema = new Schema({
     buildImg: {
         type: String,
         default: ''
-    }
+    },
+    reviews: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Review'
+        }
+    ]
 });
+
+computerBuildSchema.post('findOneAndDelete', async function (doc) {
+    if (doc) {
+        await Review.deleteMany({
+            _id: {
+                $in: doc.reviews
+            }
+        })
+    }
+})
 
 module.exports = mongoose.model('computerBuilds', computerBuildSchema);

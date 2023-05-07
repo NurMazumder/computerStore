@@ -1,16 +1,26 @@
 <% layout('layout/boilerplate') %>
 
     <h1>EDIT</h1>
-    <form action="/computerItems/<%= computerItem._id %>?_method=PUT" method="POST">
+    <form action="/computerItems/<%= computerItem._id %>?_method=PUT" method="POST" novalidate class="validated-form">
+        <div class="mb-3">
+            <label for="type" class="form-label">Type</label>
+            <input type="text" class="form-control" id="type" name="computerItems[type]"
+                value="<%= computerItem.type %>" required>
+        </div>
         <div class="mb-3">
             <label for="name" class="form-label">Name</label>
             <input type="text" class="form-control" id="name" name="computerItems[name]"
-                value="<%= computerItem.name %>">
+                value="<%= computerItem.name %>" required>
+        </div>
+        <div class="mb-3">
+            <label for="imgURL" class="form-label">imgURL</label>
+            <input type="text" class="form-control" id="imgURL" name="computerItems[imgURL]"
+                value="<%= computerItem.imgURL %>" required>
         </div>
         <div class="mb-3">
             <label for="price" class="form-label">Price</label>
             <input type="number" class="form-control" id="price" name="computerItems[price]"
-                value="<%= computerItem.price %>">
+                value="<%= computerItem.price %>" required>
         </div>
         <button class="btn btn-primary">Update Item</button>
     </form>

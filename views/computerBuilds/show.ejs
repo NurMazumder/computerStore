@@ -21,20 +21,62 @@
                     <br><%= computerBuild.psu %>
                     <br><%= computerBuild.housing %>
                 </h1>
-                <p>
-                <form action="/computerBuilds/<%= computerBuild._id %>?_method=DELETE" method="POST">
-                    <button class="btn btn-danger">Delete</button>
+                <div class="d-flex">
+                    <% if (currentUser && currentUser.role==='admin' ) { %>
+                        <form action="/builds/<%= computerBuild._id %>?_method=DELETE" method="POST">
+                            <button class="btn btn-danger">Delete</button>
+                        </form>
+                    <% } %>
+                </div>
+                <form action="/builds/<%= computerBuild._id %>/reviews" method="POST" novalidate
+                    class="mb-3 validated-form">
+                    <h2>Review</h2>
+                    <div class="mb-3">
+                        <label class="form-label" for="rating">Rating</label>
+                        <input type="range" min="1" max="5" name="review[rating]" id="rating" class="form-range">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="body">Comment</label>
+                        <textarea class="form-control" name="review[body]" id="body" cols="30" rows="3"
+                            required></textarea>
+                    </div>
+                    <button class="btn btn-success">Submit</button>
                 </form>
-                <form action="/cart">
-                    <button class="btn btn-primary">Add to Cart</button>
-                </form>
-                </p>
+                <div class="col-md-6">
+                    <h2>Reviews</h2>
+                    <% for (let review of computerBuild.reviews) { %>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"
+                                    style="<%= review.rating < 3 ? 'border: 2px solid red' : 'border: 2px solid green' %>">
+                                    Rating: <%= review.rating %>
+                                </h5>
+                                <p class="card-text">
+                                    <% if (review.author) { %>
+                                        Author: <%= review.author.username %><br>
+                                            <% } else { %>
+                                                Author: visitor<br>
+                                                <% } %>
+                                                    Review: <%= review.body %>
+                                                        <% if (currentUser && currentUser.role==='admin' ) { %>
+                                                            <form
+                                                                action="/builds/<%=computerBuild._id%>/reviews/<%=review._id%>?_method=DELETE"
+                                                                method="POST">
+                                                                <button class="btn btn-sm btn-danger">Delete</button>
+                                                            </form>
+                                                            <% } %>
+                                </p>
+                            </div>
+                        </div>
+                        <% } %>
+                </div>
+                
             </div>
         </div>
         <div class="row mt-5">
             <div class="col">
                 <footer>
-                    <a href="/computerBuilds">Back to All Builds</a>
+                    <a href="/builds">Back to All Builds</a>
                 </footer>
             </div>
         </div>

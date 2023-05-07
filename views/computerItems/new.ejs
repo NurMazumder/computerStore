@@ -2,15 +2,27 @@
 
     <body>
         <div class="container">
-            <form action="/computerItems" method="POST">
+            <form action="/computerItems" method="POST" novalidate class="validated-form">
                 <h1 class="mb-4">ADD NEW</h1>
                 <div class="mb-3">
+                    <label for="type" class="form-label">Type</label>
+                    <input type="text" class="form-control" id="type" name="computerItems[type]" required>
+                </div>
+                <div class="mb-3">
                     <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="name" name="computerItems[name]">
+                    <input type="text" class="form-control" id="name" name="computerItems[name]" required>
+                </div>
+                <div class="mb-3">
+                    <label for="brand" class="form-label">Brand</label>
+                    <input type="text" class="form-control" id="brand" name="computerItems[brand]" required>
+                </div>
+                <div class="mb-3">
+                    <label for="imgURL" class="form-label">imgURL</label>
+                    <input type="text" class="form-control" id="imgURL" name="computerItems[imgURL]" required>
                 </div>
                 <div class="mb-3">
                     <label for="price" class="form-label">Price</label>
-                    <input type="number" class="form-control" id="price" name="computerItems[price]">
+                    <input type="number" class="form-control" id="price" name="computerItems[price]" required>
                 </div>
                 <button class="btn btn-primary">Add Item</button>
             </form>

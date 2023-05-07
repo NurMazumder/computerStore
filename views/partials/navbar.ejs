@@ -5,17 +5,19 @@
             aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup" style="text-align: left;">
-            <div class="navbar-nav">
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/">Home</a>
                 <a class="nav-link" href="/computerItems">Products</a>
-                <a class="nav-link" href="/builds/">Builds</a>
+                <a class="nav-link" href="/builds">Builds</a>
             </div>
-        </div>
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup" style="text-align: right;">
             <div class="navbar-nav">
-                <a class="nav-link" href="/login">Login</a>
-                <a class="nav-link" href="/register">Register</a>
-                <a class="nav-link" href="/cart">Shopping Cart</a>
+                <% if(!currentUser) {%>
+                    <a class="nav-link" href="/login">Login</a>
+                    <a class="nav-link" href="/register">Register</a>
+                    <% } else {%>
+                        <a class="nav-link" href="/logout">Logout</a>
+                        <% } %>
             </div>
         </div>
     </div>
