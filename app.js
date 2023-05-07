@@ -2,12 +2,7 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate');
-const bcrypt = require('bcryptjs');
 const methodOverride = require('method-override');
-
-const JWT = require('json-web-token');
-JWT_SECRET = // JWT secret key
-"eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY4MzIxNDcxNCwiaWF0IjoxNjgzMjE0NzE0fQ.TzN548etvt_18eFFFSwm7V6kItQKDWYUbDfWueSEoDY"; 
 
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
 
@@ -78,8 +73,65 @@ app.delete('/computerItems/:id', async (req, res) => {
     res.redirect(`/computerItems`);
 })
 
-app.get('/builder', async (req, res) => {
-    res.render('builder')
+const computerBuilds = require('./models/computerBuild');
+
+app.get('/builds', async (req, res) => {
+    const computerBuild = await computerBuilds.find({});
+    res.render('computerBuilds/index', { computerBuild });
+});
+
+app.get('/builds/new', async (req, res) => {
+    computerItem = await ComputerItems.find({});
+    res.render('computerBuilds/new', computerItem)
+});
+
+app.post('/builds', async(req, res) => { 
+    const newBuild = new computerBuilds(req.body);
+    console.log(req.body);
+    
+    var total = 0;
+    const mobo = await ComputerItems.find({name: req.body.mobo});
+    const cpu = await ComputerItems.find({name: req.body.cpu});
+    const gpu = await ComputerItems.find({name: req.body.gpu});
+    const memory = await ComputerItems.find({name: req.body.memory});
+    const storage = await ComputerItems.find({name: req.body.storage});
+    const fan = await ComputerItems.find({name: req.body.fan});
+    const psu = await ComputerItems.find({name: req.body.psu});
+    const housing = await ComputerItems.find({name: req.body.housing});
+
+    total += mobo[0].price;
+    total += cpu[0].price;
+    total += gpu[0].price;
+    total += memory[0].price;
+    total += storage[0].price;
+    total += fan[0].price;
+    total += psu[0].price;
+    total += housing[0].price;
+
+    newBuild.price = total;
+    newBuild.buildImg = housing[0].imgURL;
+    await newBuild.save();
+
+    res.redirect(`/builds/${newBuild._id}`);
+});
+
+app.get('/builds/:id', async (req, res) => {
+    try {
+        const computerBuild = await computerBuilds.findById(req.params.id);
+        if (!computerBuild) {
+            return res.status(404).send('Build not found. Please try again');
+        }
+        res.render('computerBuilds/show', { computerBuild });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred. Please try again.');
+    }
+})
+
+app.delete('/computerBuilds/:id', async (req, res) => {
+    const { id } = req.params;
+    const computerBuild = await computerBuilds.findByIdAndDelete(id);
+    res.redirect(`/builds`);
 })
 
 app.get('/register', (req, res) => {
@@ -92,7 +144,7 @@ const User = mongoose.model("UserInfo")
 app.post('/register', async(req, res) => { 
     const {name, email, phone, password} = req.body;
     try {
-        const oldUser = await User.findOne( { email } )
+        const oldUser = await User.findOne( { email } );
         if(oldUser){
             return res.send( {error: "User already exists with this email address."} );
         }
@@ -116,32 +168,44 @@ app.get('/login', async (req, res) => {
 }) 
 
 app.post('/login', async (req, res) => {
-    const {email, password} = req.body;
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findById({_id: '64557547bfe0ef11be57812d'});
+    const userPass = await User.findById({_id: '64557547bfe0ef11be57812d'}).password;
     console.log(req.body);
     console.log(existingUser);
     if(!existingUser){
         return res.send( {error: "User not found with this email address."} );
     }
-    if(await bcrypt.compare(password, existingUser.password)){
-        const token = JWT.sign({}, JWT_SECRET);
+    const result = req.body.password === userPass;
+    console.log(result);
+    if(result){
         if(res.status(201)){
-            console.log({ email, encryptedPassword });
-            res.redirect("/");
+            if(existingUser.name === 'admin'){
+                res.redirect('/users/admin');
+            }
+            else{
+                res.redirect(`/users/${_id}`);
+            }
+
         }
         else{
             return res.send({error: "An error occurred. Please try again."});
         }
     }
-    res.send({error: "Invalid password. Please change your password and try again."});
+    else{
+        res.send({error: "Invalid password. Please input the correct password and try again."});
+    }
 }); 
+
+app.get('/users/admin', (req, res) => {
+    res.render('userInfo/admin');
+});
+
+app.get('/users/admin', (req, res) => {
+    res.render('admin');
+});
 
 app.listen(3000, () => {
     console.log('Working 3000')
-})
-
-app.get('/forgot-password', (req, res) => {
-    res.render('userInfo/forgotPassword')
 })
 
 app.get('/cart', (req, res) => {

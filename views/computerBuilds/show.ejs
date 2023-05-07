@@ -1,0 +1,41 @@
+<% layout('layout/boilerplate') %>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="<%= computerBuild.buildImg %>" alt="<%= computerBuild._id %>" class="img-fluid border">
+            </div>
+            <div class="col-md-6">
+                <h1>
+                    Build <%= computerBuild._id %>
+                </h1>
+                <h1>$<%= computerBuild.price %>
+                </h1>
+                <h1 style="font-size:medium">
+                    <br><%= computerBuild.mobo %>
+                    <br><%= computerBuild.cpu %>
+                    <br><%= computerBuild.gpu %>
+                    <br><%= computerBuild.memory %>
+                    <br><%= computerBuild.storage %>
+                    <br><%= computerBuild.fan %>
+                    <br><%= computerBuild.psu %>
+                    <br><%= computerBuild.housing %>
+                </h1>
+                <p>
+                <form action="/computerBuilds/<%= computerBuild._id %>?_method=DELETE" method="POST">
+                    <button class="btn btn-danger">Delete</button>
+                </form>
+                <form action="/cart">
+                    <button class="btn btn-primary">Add to Cart</button>
+                </form>
+                </p>
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class="col">
+                <footer>
+                    <a href="/computerBuilds">Back to All Builds</a>
+                </footer>
+            </div>
+        </div>
+    </div>

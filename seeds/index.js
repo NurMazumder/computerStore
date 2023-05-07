@@ -31,7 +31,8 @@ const seedDB = async () => {
                 name: person.name,
                 email: person.email,
                 phone: person.phone,
-                password: person.password
+                password: person.password,
+                balance: person.balance
             });
             await User.save();
         }

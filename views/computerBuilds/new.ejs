@@ -1,0 +1,117 @@
+<% layout('layout/boilerplate') %>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Builder</title>
+</head>
+
+<body>
+    <h1>PC BUILDER</h1>
+    <form action="/builds" method="POST">
+    <div>
+        <div class="mb-3">
+            <label for="mobo">Choose a Motherboard:</label>
+            <select name="mobo" id="mobo" class="form-control">
+                <option>Motherboard</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='motherboard') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="cpu">Choose a CPU:</label>
+            <select name="cpu" id="cpu" class="form-control">
+                <option>CPU</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='CPU') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="gpu">Choose a GPU:</label>
+            <select name="gpu" id="gpu" class="form-control">
+                <option>GPU</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='GPU') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="cars">Choose memory:</label>
+            <select name="memory" id="memory" class="form-control">
+                <option>Memory</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='MEMORY') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="cars">Choose storage:</label>
+            <select name="storage" id="storage" class="form-control">
+                <option>Storage</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='STORAGE') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="fan">Choose a fan:</label>
+            <select name="fan" id="fan" class="form-control">
+                <option>Fan</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='FAN') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="cars">Choose a PSU:</label>
+            <select name="psu" id="psu" class="form-control">
+                <option>Power Supply</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='PSU') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="housing">Choose a case:</label>
+            <select name="housing" id="housing" class="form-control">
+                <option>Case</option>
+                <% %>
+                <% for (let item of computerItem) { %>
+                    <% if (item.type =='CASE') { %>
+                        <option value="<%=item.name%>"><%= item.name%></option>
+                    <% } %>
+                <% } %>
+            </select>
+        </div>
+    </div>
+    <input type="submit">
+</form>
+
+</body>
+
+</html>
