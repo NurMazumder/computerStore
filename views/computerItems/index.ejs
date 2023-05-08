@@ -1,7 +1,9 @@
 <% layout('layout/boilerplate') %>
     <h1>COMPUTER ITEMS</h1>
     <div>
+        <% if (currentUser && currentUser.role==='admin' ) { %>
         <a href="/computerItems/new">Add Item</a>
+        <% } %>
     </div>
 
     <% let types={ motherboard: [], CPU: [], FAN: [], PSU: [], MEMORY: [], STORAGE: [], GPU: [], CASE: [], OPERATING:

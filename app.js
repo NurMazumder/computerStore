@@ -13,6 +13,7 @@ const ComputerItems = require('./models/computerStore');
 const passport = require('passport');
 const LocalStrategy = require('passport-local'); // <-- here
 const User = require('./models/user');
+const bodyparser = require('body-parser');
 const { isLoggedIn } = require('./middleware');
 
 
@@ -110,9 +111,9 @@ app.put('/computerItems/:id', isLoggedIn, catchAsync(async (req, res) => {
     const computerItem = await ComputerItems.findByIdAndUpdate(id, { ...req.body.computerItems });
     req.flash('success', 'Successfully updated');
     res.redirect(`/computerItems/${computerItem._id}`);
-}));
+}));``
 
-app.delete('/computerItems/:id', catchAsync(async (req, res) => {
+app.delete('/computerItems/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     const computerItem = await ComputerItems.findByIdAndDelete(id);
     res.redirect(`/computerItems`);
@@ -153,7 +154,9 @@ app.get('/register', (req, res) => {
 app.post('/register', catchAsync(async (req, res, next) => {
     try {
         const { email, username, password } = req.body;
+        console.log(req.body);
         const user = new User({ email, username });
+        console.log(user);
         const registeredUser = await User.register(user, password);
         req.login(registeredUser, err => {
             if (err) return next(err);
@@ -172,7 +175,7 @@ app.get('/login', (req, res) => {
 })
 
 app.post('/login', passport.authenticate('local', { failureFlash: true, failureRedirect: '/login' }), (req, res) => {
-    req.flash('success', 'welcome back!');
+    req.flash('success', 'Welcome back!');
     // const redirectUrl = req.session.returnTo || '/computerItems';
     // delete req.session.returnTo;
     // res.redirect(redirectUrl);
@@ -189,10 +192,10 @@ app.get('/logout', (req, res) => {
     });
 })
 
-const computerBuilds = require('./models/computerBuild');
+const ComputerBuilds = require('./models/computerBuild');
 
 app.get('/builds', async (req, res) => {
-    const computerBuild = await computerBuilds.find({});
+    const computerBuild = await ComputerBuilds.find({});
     res.render('computerBuilds/index', { computerBuild });
 });
 
@@ -202,9 +205,9 @@ app.get('/builds/new', async (req, res) => {
 });
 
 app.post('/builds', async(req, res) => { 
-    const newBuild = new computerBuilds(req.body);
+    const newBuild = new ComputerBuilds(req.body);
     console.log(req.body);
-    
+
     var total = 0;
     const mobo = await ComputerItems.find({name: req.body.mobo});
     const cpu = await ComputerItems.find({name: req.body.cpu});
@@ -226,6 +229,11 @@ app.post('/builds', async(req, res) => {
 
     newBuild.price = total;
     newBuild.buildImg = housing[0].imgURL;
+    if (req.isAuthenticated()) {
+        newBuild.author = req.user.username;
+    } else {
+        newBuild.author = null;
+    }
     await newBuild.save();
     req.flash('success', 'Successfully Created');
 
@@ -234,7 +242,7 @@ app.post('/builds', async(req, res) => {
 
 app.get('/builds/:id', async (req, res) => {
     try {
-        const computerBuild = await computerBuilds.findById(req.params.id).populate({
+        const computerBuild = await ComputerBuilds.findById(req.params.id).populate({
             path: 'reviews',
             populate: {
                 path: 'author'
@@ -250,16 +258,16 @@ app.get('/builds/:id', async (req, res) => {
     }
 })
 
-app.delete('/computerBuilds/:id', async (req, res) => {
+app.delete('/builds/:id', async (req, res) => {
     const { id } = req.params;
-    const computerBuild = await computerBuilds.findByIdAndDelete(id);
+    await ComputerBuilds.findByIdAndDelete(id);
     res.redirect(`/builds`);
 })
 
 app.post('/builds/:id/reviews', catchAsync(async (req, res) => {
-    const computerBuild = await computerBuilds.findById(req.params.id);
+    const computerBuild = await ComputerBuilds.findById(req.params.id);
     const review = new Review(req.body.review);
-    if (req.isAuthenticated()) {
+     if (req.isAuthenticated()) {
         review.author = req.user._id;
     } else {
         review.author = null;
@@ -278,6 +286,10 @@ app.delete('/builds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
     await Review.findByIdAndDelete(reviewId);
     res.redirect(`/builds/${id}`);
 }))
+
+app.get('/cart', (req, res) => {
+    res.render('cart');
+});
 
 
 app.all('*', (req, res, next) => {

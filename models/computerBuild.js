@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Review = require('./review');
 
 const computerBuildSchema = new Schema({
     mobo: {
@@ -41,6 +42,12 @@ const computerBuildSchema = new Schema({
     buildImg: {
         type: String,
         default: ''
+    },
+    name:{
+        type: String,
+    },
+    author: {
+        type: String,
     },
     reviews: [
         {

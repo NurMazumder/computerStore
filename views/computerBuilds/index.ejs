@@ -1,7 +1,9 @@
 <% layout('layout/boilerplate') %>
     <h1>BUILDS</h1>
     <div>
+        <% if (currentUser) { %>
         <a href="/builds/new">Create Build</a>
+        <% } %>
     </div>
 
     <div class="row">
@@ -22,7 +24,10 @@
                             </div>
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    Build <%= item._id %>
+                                    <%= item.name %>
+                                </h5>
+                                <h5 class="card-title" style="font-size: small;">
+                                     (Build no. <%= item._id %> )
                                 </h5>
                                 <p class="card-text">$<%= item.price %>
                                 </p>
