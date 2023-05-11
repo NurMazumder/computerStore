@@ -10,6 +10,7 @@ const filterBadWords = require('./utils/filterBadWords');
 const session = require('express-session');
 const flash = require('connect-flash');
 const ComputerItems = require('./models/computerStore');
+const Cart = require('./models/cartModel');
 const passport = require('passport');
 const LocalStrategy = require('passport-local'); // <-- here
 const User = require('./models/user');
@@ -111,7 +112,7 @@ app.put('/computerItems/:id', isLoggedIn, catchAsync(async (req, res) => {
     const computerItem = await ComputerItems.findByIdAndUpdate(id, { ...req.body.computerItems });
     req.flash('success', 'Successfully updated');
     res.redirect(`/computerItems/${computerItem._id}`);
-}));``
+}));
 
 app.delete('/computerItems/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
@@ -139,7 +140,7 @@ app.post('/computerItems/:id/reviews', catchAsync(async (req, res) => {
 }));
 
 
-app.delete('/computerItems/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+app.delete('/computerItems/:id/reviews/:reviewId', isLoggedIn, catchAsync(async (req, res) => {
     const { id, reviewId } = req.params;
     await ComputerItems.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
     await Review.findByIdAndDelete(reviewId);
@@ -158,6 +159,10 @@ app.post('/register', catchAsync(async (req, res, next) => {
         const user = new User({ email, username });
         console.log(user);
         const registeredUser = await User.register(user, password);
+        
+        const userCart = new Cart({userID: user._id}); // create user cart
+        await userCart.save();
+
         req.login(registeredUser, err => {
             if (err) return next(err);
             req.flash('success', 'Welcome!');
@@ -192,6 +197,8 @@ app.get('/logout', (req, res) => {
     });
 })
 
+// PC builder 
+
 const ComputerBuilds = require('./models/computerBuild');
 
 app.get('/builds', async (req, res) => {
@@ -199,16 +206,16 @@ app.get('/builds', async (req, res) => {
     res.render('computerBuilds/index', { computerBuild });
 });
 
-app.get('/builds/new', async (req, res) => {
-    computerItem = await ComputerItems.find({});
-    res.render('computerBuilds/new', computerItem)
+app.get('/builds/new', isLoggedIn, async (req, res) => {
+    const computerItem = await ComputerItems.find({});
+    res.render('computerBuilds/new', {computerItem});
 });
 
-app.post('/builds', async(req, res) => { 
+app.post('/builds', isLoggedIn, async(req, res) => { 
     const newBuild = new ComputerBuilds(req.body);
     console.log(req.body);
 
-    var total = 0;
+    var total = 0; // Find all items and their prices to calculate build price
     const mobo = await ComputerItems.find({name: req.body.mobo});
     const cpu = await ComputerItems.find({name: req.body.cpu});
     const gpu = await ComputerItems.find({name: req.body.gpu});
@@ -228,7 +235,7 @@ app.post('/builds', async(req, res) => {
     total += housing[0].price;
 
     newBuild.price = total;
-    newBuild.buildImg = housing[0].imgURL;
+    newBuild.imgURL = housing[0].imgURL; // Use case as build image
     if (req.isAuthenticated()) {
         newBuild.author = req.user.username;
     } else {
@@ -240,6 +247,8 @@ app.post('/builds', async(req, res) => {
     res.redirect(`/builds/${newBuild._id}`);
 });
 
+// Reviews for PC builds
+
 app.get('/builds/:id', async (req, res) => {
     try {
         const computerBuild = await ComputerBuilds.findById(req.params.id).populate({
@@ -247,7 +256,7 @@ app.get('/builds/:id', async (req, res) => {
             populate: {
                 path: 'author'
             }
-        });;
+        });
         if (!computerBuild) {
             return res.status(404).send('Build not found. Please try again');
         }
@@ -258,7 +267,7 @@ app.get('/builds/:id', async (req, res) => {
     }
 })
 
-app.delete('/builds/:id', async (req, res) => {
+app.delete('/builds/:id', isLoggedIn, async (req, res) => {
     const { id } = req.params;
     await ComputerBuilds.findByIdAndDelete(id);
     res.redirect(`/builds`);
@@ -280,15 +289,101 @@ app.post('/builds/:id/reviews', catchAsync(async (req, res) => {
 }));
 
 
-app.delete('/builds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+app.delete('/builds/:id/reviews/:reviewId', isLoggedIn, catchAsync(async (req, res) => {
     const { id, reviewId } = req.params;
     await ComputerBuilds.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
     await Review.findByIdAndDelete(reviewId);
     res.redirect(`/builds/${id}`);
 }))
 
-app.get('/cart', (req, res) => {
-    res.render('cart');
+// Cart
+
+app.get('/cart', catchAsync(async(req, res) => {
+    // get actual store objects from IDs in cart object
+    const userCart = await Cart.findOne({userID: req.user._id}); // find cart of user
+    const itemList = [];
+    for(let i = 0; i < userCart.items.length; i++){
+        var item;
+        if(await ComputerItems.findById(userCart.items[i]) !== null){ // item is a store product
+            item = await ComputerItems.findById(userCart.items[i]);
+        }
+        else if(await ComputerBuilds.findById(userCart.items[i]) !== null){ // item is a build
+            item = await ComputerBuilds.findById(userCart.items[i]);
+        }
+        itemList.push(item);
+    }
+
+    res.render('cartComponents/cart', { itemList });
+}));
+
+app.post('/cart/:id', catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { quantity } = req.body;
+    console.log(id);
+
+    const userCart = await Cart.findOne({userID: req.user._id}); // find cart of user
+    var item;
+    if(await ComputerItems.findById(id) !== null){ // item is a store product
+        item = await ComputerItems.findById(id);
+    }
+    else if(await ComputerBuilds.findById(id) !== null){ // item is a build
+        item = await ComputerBuilds.findById(id);
+    }
+    console.log(item.price);
+    console.log("Before:",userCart.items);
+    for(let i = 0; i < quantity; i++){ // add desired quantity of item
+        userCart.items.push(id); // convert to string
+        userCart.total += item.price;
+    }
+    await userCart.save();
+    
+    req.flash('success', 'Successfully added item(s) to cart.');
+    console.log("After:", userCart.items);
+    console.log(userCart.total);
+    await userCart.save();
+    res.redirect('/cart');
+}));
+
+app.put('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    const userCart = await Cart.findOne({userID: req.user._id});
+    const itemIndex = userCart.items.indexOf(id);
+    console.log("Item found at index", itemIndex);
+
+    var item;
+    if(await ComputerItems.findById(id) !== null){ // item is a store product
+        item = await ComputerItems.findById(id);
+    }
+    else if(await ComputerBuilds.findById(id) !== null){ // item is a build
+        item = await ComputerBuilds.findById(id);
+    }
+    console.log(item);
+
+    console.log("Cart before:",userCart.items)
+    userCart.items.splice(itemIndex, 1);
+    console.log("Cart after:",userCart.items);
+    console.log("Total before:", userCart.total);
+    userCart.total -= item.price;
+    console.log("Total after:", userCart.total);
+    await userCart.save();
+
+    req.flash('success', 'Successfully updated cart.');
+    res.redirect(`/cart`);
+}));
+
+app.get('/checkout', isLoggedIn, async(req, res) => {
+    const userCart = await Cart.findOne({userID: req.user._id});
+    if(userCart.items.length < 1){
+        req.session.returnTo = req.originalUrl;
+        req.flash('error', 'Your cart is empty!');
+        return res.redirect('/cart');
+    }
+    res.render('cartComponents/checkout');
+});
+
+app.get('/contact', (req, res) => {
+    res.render('contact');
 });
 
 

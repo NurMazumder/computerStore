@@ -39,7 +39,7 @@ const computerBuildSchema = new Schema({
         type: Number,
         default: 0
     },
-    buildImg: {
+    imgURL: {
         type: String,
         default: ''
     },

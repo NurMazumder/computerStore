@@ -1,0 +1,49 @@
+<% layout('layout/boilerplate') %>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart</title>
+</head>
+
+<body>
+    <h1>CART</h1>
+    <% let total = 0 %>
+    <% for(let item of itemList) { %>
+        <div class="col-md-3">
+                <div class="card mb-4">
+                    <div class="card-image">
+                        <img src="<%= item.imgURL %>"
+                            class="card-img-top img-fluid square-image"
+                            alt="<%= item.name %>">
+                    </div>
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <%= item.name %>
+                        </h5>
+                        <h5 class="card-body">
+                            $<%= item.price %>
+                        </h5>
+                    </div>
+                    <div class="d-flex">
+                            <form action="/cart/<%= item._id %>?_method=PUT" method="POST">
+                                <button class="btn btn-danger">Delete</button>
+                            </form>
+                    </div>
+
+                </div>
+        </div>
+        <% total += item.price %>
+    <% } %> 
+
+    <b>Subtotal: $<%= total %></b>
+
+    <form action="/checkout">
+        <button class="btn btn-primary">Checkout</button>
+    </form>
+</body>
+
+</html>

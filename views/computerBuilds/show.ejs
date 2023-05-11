@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-6">
-                <img src="<%= computerBuild.buildImg %>" alt="<%= computerBuild._id %>" class="img-fluid border">
+                <img src="<%= computerBuild.imgURL %>" alt="<%= computerBuild._id %>" class="img-fluid border">
             </div>
             <div class="col-md-6">
                 <h1>
@@ -30,6 +30,15 @@
                     <% if (currentUser && currentUser.role==='admin' ) { %>
                         <form action="/builds/<%= computerBuild._id %>?_method=DELETE" method="POST">
                             <button class="btn btn-danger">Delete</button>
+                        </form>
+                    <% } %>
+                </div>
+                <div class="d-flex">
+                    <% if (currentUser) { %>
+                        <form action="/cart/<%= computerBuild._id %>" method="POST">
+                            <label for="quantity">Quantity</label>
+                            <input name="quantity" id="quantity" type="number" min='1' value='1' style="width: 40px">
+                            <button class="btn btn-primary">Add to Cart</button>
                         </form>
                     <% } %>
                 </div>

@@ -1,0 +1,18 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const cartSchema = new Schema({
+    userID:{
+        type: String
+    },
+    total: {
+        type: Number,
+        default: 0
+    },
+    items: [{
+        type: mongoose.Types.ObjectId,
+        default: null
+    }],
+});
+
+module.exports = mongoose.model('Cart', cartSchema)
