@@ -1,0 +1,31 @@
+<% layout('layout/boilerplate') %>
+
+<h1>Account - <%= user.username %></h1>
+
+<h2>wallet - $<%= user.wallet %></h2>
+
+<form action="/account/<%= user._id %>?_method=PUT" method="POST" novalidate class="validated-form">
+<div class="mb-3">
+    <label for="wallet" class="form-label">Deposit Money</label>
+    <input type="number" class="form-control" id="wallet" name="user[wallet]" placeholder="Enter Amount"
+        value="<%= user.wallet %>" required>
+</div>
+<button class="btn btn-primary">$Deposit</button>
+</form>
+
+<form action="/account/<%= user._id %>?_method=PUT" method="POST" novalidate class="validated-form">
+<h2>Change Personal Info</h2>
+<div class="mb-3">
+    <label for="username" class="form-label">username</label>
+    <input type="text" class="form-control" id="username" name="user[username]"
+        value="<%= user.username %>" required>
+</div>
+<div class="mb-3">
+    <label for="email" class="form-label">email</label>
+    <input type="email" class="form-control" id="email" name="user[email]"
+        value="<%= user.email %>" required>
+</div>
+<button class="btn btn-primary">Update info</button>
+</form>
+
+    

@@ -1,10 +1,6 @@
 <% layout('layout/boilerplate') %>
     <h1>COMPUTER ITEMS</h1>
-    <div>
-        <% if (currentUser && currentUser.role==='admin' ) { %>
-        <a href="/computerItems/new">Add Item</a>
-        <% } %>
-    </div>
+    
 
     <% let types={ motherboard: [], CPU: [], FAN: [], PSU: [], MEMORY: [], STORAGE: [], GPU: [], CASE: [], OPERATING:
         [], MONITOR: [] }; %>
@@ -12,7 +8,6 @@
         <% for (let item of computerItems) { %>
             <% types[item.type].push(item); %>
                 <% } %>
-
                     <% for (let type in types) { %>
                         <% if (types[type].length> 0) { %>
                             <div class="row mt-5">

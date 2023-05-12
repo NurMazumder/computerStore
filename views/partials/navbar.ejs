@@ -9,16 +9,45 @@
             <div class="navbar-nav me-auto">
                 <a class="nav-link" href="/computerItems">Products</a>
                 <a class="nav-link" href="/builds">Builds</a>
+                <% if (currentUser && currentUser.role==='admin' ) { %>
+                    <a class="nav-link" href="/computerItems/new">Add Product</a>
+                <% } %>
             </div>
-            <div class="navbar-nav">
-                <% if(!currentUser) {%>
-                    <a class="nav-link" href="/login">Login</a>
-                    <a class="nav-link" href="/register">Register</a>
-                    <% } else {%>
+            <ul class="navbar-nav ms-auto">
+                <% if(!currentUser) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">Register</a>
+                    </li>
+                <% } else { %>
+                    <li class="nav-item">
                         <a class="nav-link" href="/cart">Cart</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Management
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="/account/<%= currentUser._id %>">Account</a>
+                            <% if (currentUser && currentUser.role==='admin' ||  currentUser.role==='employee') { %>
+                            <a class="dropdown-item" href="/manage">Application</a>
+                            <a class="dropdown-item" href="/customer">Customer Management</a>
+                            <% if (currentUser && currentUser.role==='admin') { %>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="/employee">Employee Management</a>
+                            <a class="dropdown-item" href="/memo">Memo</a>
+                            <% } %>
+                        </div>
+                    </li>
+                    <% } %>
+                    <li class="nav-item">
                         <a class="nav-link" href="/logout">Logout</a>
-                        <% } %>
-            </div>
+                    </li>
+                <% } %>
+            </ul>
         </div>
     </div>
 </nav>

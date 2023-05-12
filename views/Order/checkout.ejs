@@ -1,0 +1,84 @@
+<% layout('layout/boilerplate') %>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+</head>
+
+<body>
+    <h1>CHECKOUT</h1>
+    <br>
+    <% layout('layout/boilerplate') %>
+    <% let states_list = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'] %>
+
+    <body>
+        <% let total = 0 %>
+        <% let shipping = 0 %>
+        <% let tax = 0 %>
+        <h2>YOUR ITEMS</h2>
+        <% for(let item of itemList) { %>
+            <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-image">
+                            <img src="<%= item.imgURL %>"
+                                class="card-img-top img-fluid square-image"
+                                alt="<%= item.name %>">
+                        </div>
+                        <div class="card-header">
+                            <h5 class="card-title">
+                                <%= item.name %>
+                            </h5>
+                            <h5 class="card-body">
+                                $<%= item.price %>
+                            </h5>
+                        </div>
+                    </div>
+            </div>
+            <% total += item.price %>
+        <% } %> 
+        <h2>SHIPPING ADDRESS</h2>
+        <div class="container">
+            <form action="/checkout" method="POST" novalidate class="validated-form">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Name..." required>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">Address</label>
+                    <input type="text" class="form-control" id="address" name="address" placeholder="Address..." required>
+                </div>
+                <div class="mb-3">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" placeholder="City..." required>
+                </div>
+                <div class="mb-3">
+                    <label for="state">State</label>
+                    <select name="state" id="state" class="form-control" required>
+                        <option>State</option>
+                        <% %>
+                        <% for (let state of states_list) { %>
+                                <option value="<%=state%>"><%= state%></option>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="zip" class="form-label">ZIP Code</label>
+                    <input type="number" class="form-control" id="zip" name="zip" placeholder="ZIP code..." minlength="5" maxlength="5" required>
+                </div>
+
+            <div class="card mb-4"> 
+                <div class="card-body">
+                    <h2> ORDER TOTAL: $<%= total + shipping + tax %> </h2>
+                </div>
+            </div>
+                <button class="btn btn-primary">Place order</button>
+            </form>
+        </div>
+    </body>
+</body>
+
+</html>

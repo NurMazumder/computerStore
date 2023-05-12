@@ -10,12 +10,13 @@ const filterBadWords = require('./utils/filterBadWords');
 const session = require('express-session');
 const flash = require('connect-flash');
 const ComputerItems = require('./models/computerStore');
+const ComputerBuilds = require('./models/ComputerBuild');
 const Cart = require('./models/cartModel');
 const passport = require('passport');
 const LocalStrategy = require('passport-local'); // <-- here
 const User = require('./models/user');
-const bodyparser = require('body-parser');
 const { isLoggedIn } = require('./middleware');
+const user = require('./models/user');
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
@@ -114,7 +115,7 @@ app.put('/computerItems/:id', isLoggedIn, catchAsync(async (req, res) => {
     res.redirect(`/computerItems/${computerItem._id}`);
 }));
 
-app.delete('/computerItems/:id', isLoggedIn, catchAsync(async (req, res) => {
+app.delete('/computerItems/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
     const computerItem = await ComputerItems.findByIdAndDelete(id);
     res.redirect(`/computerItems`);
@@ -132,7 +133,13 @@ app.post('/computerItems/:id/reviews', catchAsync(async (req, res) => {
     } else {
         review.author = null;
     }
-    review.body = filterBadWords(review.body); // Filter bad words in the comment
+    const filteredBody = filterBadWords(review.body, req.user); // Filter bad words in the comment
+    if (!req.isAuthenticated() && filteredBody !== review.body) {
+        // User is not logged in and review has bad words, do not save
+        req.flash('error', 'You must be logged in to post a review with bad words.');
+        return res.redirect(`/computerItems/${computerItem._id}`);
+    }
+    review.body = filteredBody;
     computerItem.reviews.push(review);
     await review.save();
     await computerItem.save();
@@ -140,13 +147,27 @@ app.post('/computerItems/:id/reviews', catchAsync(async (req, res) => {
 }));
 
 
-app.delete('/computerItems/:id/reviews/:reviewId', isLoggedIn, catchAsync(async (req, res) => {
+
+app.delete('/computerItems/:id/reviews/:reviewId', catchAsync(async (req, res) => {
     const { id, reviewId } = req.params;
     await ComputerItems.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
     await Review.findByIdAndDelete(reviewId);
     res.redirect(`/computerItems/${id}`);
 }))
 
+
+app.post('/computerItems/:id/computerBuild', catchAsync(async (req, res) => {
+    const computerItem = await ComputerItems.findById(req.params.id);
+    const review = new computerBuilds(req.body.review);
+    if (req.isAuthenticated()) {
+        review.author = req.user._id;
+    } else {
+        review.author = null;
+    }
+
+    await computerItem.save();
+    res.redirect(`/computerItems`);
+}));
 
 //User register/Login
 app.get('/register', (req, res) => {
@@ -155,11 +176,9 @@ app.get('/register', (req, res) => {
 app.post('/register', catchAsync(async (req, res, next) => {
     try {
         const { email, username, password } = req.body;
-        console.log(req.body);
         const user = new User({ email, username });
-        console.log(user);
         const registeredUser = await User.register(user, password);
-        
+                
         const userCart = new Cart({userID: user._id}); // create user cart
         await userCart.save();
 
@@ -197,9 +216,74 @@ app.get('/logout', (req, res) => {
     });
 })
 
-// PC builder 
+//Account Management
+app.get('/manage',isLoggedIn, catchAsync(async (req, res) => {
+    const users = await User.find({});
+    res.render('Users/manage', { users })
+}))
 
-const ComputerBuilds = require('./models/computerBuild');
+
+app.get('/manage/:id', isLoggedIn,catchAsync(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    res.render('Users/edit', { user });
+}));
+
+app.put('/manage/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const user = await User.findByIdAndUpdate(id, { ...req.body });
+    await user.save();
+    req.flash('success', 'Successfully updated');
+    res.redirect('/manage');
+}));
+
+app.get('/memo',isLoggedIn, catchAsync(async (req, res) => {
+    const users = await User.find({});
+    res.render('Users/memo', { users })
+}))
+
+app.get('/customer',isLoggedIn, catchAsync(async (req, res) => {
+    const users = await User.find({});
+    res.render('Users/customer', { users })
+}))
+
+app.delete('/customer/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+    res.redirect('/customer');
+  }));
+
+
+
+app.get('/account/:id', isLoggedIn,catchAsync(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    res.render('Users/account', { user });
+}));
+
+app.put('/account/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    const newAmount = parseInt(req.body.user.wallet);
+    const updatedWallet = user.wallet + newAmount;
+    user.wallet = updatedWallet;
+    await user.save();
+    req.flash('success', 'Successfully updated');
+    res.redirect(`/account/${id}`);
+  }));
+
+
+app.get('/employee',isLoggedIn, catchAsync(async (req, res) => {
+    const users = await User.find({});
+    res.render('Users/employee', { users })
+}))
+
+
+app.delete('/employee/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+    res.redirect('/employee');
+  }));
+
+  // PC builder 
 
 app.get('/builds', async (req, res) => {
     const computerBuild = await ComputerBuilds.find({});
@@ -225,8 +309,7 @@ app.post('/builds', isLoggedIn, async(req, res) => {
     const psu = await ComputerItems.find({name: req.body.psu});
     const housing = await ComputerItems.find({name: req.body.housing});
 
-    total += mobo[0].price;
-    total += cpu[0].price;
+    total += mobo[0].price + cpu[0].price;
     total += gpu[0].price;
     total += memory[0].price;
     total += storage[0].price;
@@ -296,9 +379,10 @@ app.delete('/builds/:id/reviews/:reviewId', isLoggedIn, catchAsync(async (req, r
     res.redirect(`/builds/${id}`);
 }))
 
+  
 // Cart
 
-app.get('/cart', catchAsync(async(req, res) => {
+app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
     // get actual store objects from IDs in cart object
     const userCart = await Cart.findOne({userID: req.user._id}); // find cart of user
     const itemList = [];
@@ -313,10 +397,10 @@ app.get('/cart', catchAsync(async(req, res) => {
         itemList.push(item);
     }
 
-    res.render('cartComponents/cart', { itemList });
+    res.render('Order/cart', { itemList });
 }));
 
-app.post('/cart/:id', catchAsync(async (req, res) => {
+app.post('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     const { quantity } = req.body;
     console.log(id);
@@ -372,19 +456,82 @@ app.put('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
     res.redirect(`/cart`);
 }));
 
-app.get('/checkout', isLoggedIn, async(req, res) => {
+app.get('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     const userCart = await Cart.findOne({userID: req.user._id});
     if(userCart.items.length < 1){
-        req.session.returnTo = req.originalUrl;
         req.flash('error', 'Your cart is empty!');
         return res.redirect('/cart');
     }
-    res.render('cartComponents/checkout');
-});
+    const itemList = [];
+    for(let i = 0; i < userCart.items.length; i++){
+        var item;
+        if(await ComputerItems.findById(userCart.items[i]) !== null){ // item is a store product
+            item = await ComputerItems.findById(userCart.items[i]);
+        }
+        else if(await ComputerBuilds.findById(userCart.items[i]) !== null){ // item is a build
+            item = await ComputerBuilds.findById(userCart.items[i]);
+        }
+        itemList.push(item);
+    }
+
+    res.render('Order/checkout', { itemList });
+}));
+
+const Order = require('./models/orderModel');
+
+app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
+    const userCart = await Cart.findOne({userID: req.user._id});
+
+    const orderAddress = []; // order delivery address
+    orderAddress.push(req.body.name, req.body.address, req.body.city, req.body.state, String(req.body.zip));
+
+    const itemList = [];
+    for(let itemID of userCart.items){
+        var item;
+        if(await ComputerItems.findById(itemID) !== null){ // item is a store product
+            item = await ComputerItems.findById(itemID);
+        }
+        else if(await ComputerBuilds.findById(itemID) !== null){ // item is a build
+            item = await ComputerBuilds.findById(itemID);
+        }
+        console.log(item);
+        itemList.push(item);
+    }
+    console.log(itemList);
+
+    const newOrder = new Order({
+        address: orderAddress,
+        order: itemList,
+        total: userCart.total
+    })
+    console.log(newOrder);
+    await newOrder.save();
+
+    userCart.total = 0; // reset user's cart
+    userCart.items = [];
+    await userCart.save();
+
+    res.redirect(`/order/${newOrder._id}`);
+}));
+
+
+app.get('/order/:id', isLoggedIn, catchAsync(async(req, res) => {
+    const {id} = req.params;
+    console.log({id});
+    const thisOrder = await Order.findById(id);
+    console.log(thisOrder);
+    
+    res.render('Order/order', { thisOrder });
+}));
 
 app.get('/contact', (req, res) => {
     res.render('contact');
 });
+
+  
+
+  
+
 
 
 app.all('*', (req, res, next) => {

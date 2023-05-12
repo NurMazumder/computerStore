@@ -1,0 +1,19 @@
+<% layout('layout/boilerplate') %>
+
+<h1>Application</h1>
+
+<form action="/manage/<%= user._id %>?_method=PUT" method="POST">
+  <input type="hidden" name="_method" value="PUT">
+  <div class="form-group">
+    <h2> <%= user.username %></h2>
+    <label for="role">Role:</label>
+    <select id="role" name="role" class="form-control">
+      <option value="customer" <% if (user.role === 'customer') { %> selected <% } %>>Customer</option>
+      <% if (currentUser && currentUser.role==='admin') { %>
+      <option value="employee" <% if (user.role === 'employee') { %> selected <% } %>>Employee</option>
+      <% } %>
+      <option value="rejected" <% if (user.role === 'rejected') { %> selected <% } %>>Rejected</option>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary mt-3">Update Role</button>
+</form>

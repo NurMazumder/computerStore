@@ -14,7 +14,7 @@
     <div>
         <div class="mb-3">
             <label for="mobo">Choose a Motherboard:</label>
-            <select name="mobo" id="mobo" class="form-control">
+            <select name="mobo" id="mobo" class="form-control" required>
                 <option>Motherboard</option>
                 <% %>
                 <% for (let item of computerItem) { %>
@@ -26,7 +26,7 @@
         </div>
         <div class="mb-3">
             <label for="cpu">Choose a CPU:</label>
-            <select name="cpu" id="cpu" class="form-control">
+            <select name="cpu" id="cpu" class="form-control" required>
                 <option>CPU</option>
                 <% %>
                 <% for (let item of computerItem) { %>
@@ -38,7 +38,7 @@
         </div>
         <div class="mb-3">
             <label for="gpu">Choose a GPU:</label>
-            <select name="gpu" id="gpu" class="form-control">
+            <select name="gpu" id="gpu" class="form-control" required>
                 <option>GPU</option>
                 <% %>
                 <% for (let item of computerItem) { %>
@@ -50,7 +50,7 @@
         </div>
         <div class="mb-3">
             <label for="cars">Choose memory:</label>
-            <select name="memory" id="memory" class="form-control">
+            <select name="memory" id="memory" class="form-control" required>
                 <option>Memory</option>
                 <% %>
                 <% for (let item of computerItem) { %>
@@ -62,7 +62,7 @@
         </div>
         <div class="mb-3">
             <label for="cars">Choose storage:</label>
-            <select name="storage" id="storage" class="form-control">
+            <select name="storage" id="storage" class="form-control" required>
                 <option>Storage</option>
                 <% %>
                 <% for (let item of computerItem) { %>
@@ -74,7 +74,7 @@
         </div>
         <div class="mb-3">
             <label for="fan">Choose a fan:</label>
-            <select name="fan" id="fan" class="form-control">
+            <select name="fan" id="fan" class="form-control" required>
                 <option>Fan</option>
                 <% %>
                 <% for (let item of computerItem) { %>

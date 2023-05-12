@@ -39,7 +39,11 @@
         <% total += item.price %>
     <% } %> 
 
-    <b>Subtotal: $<%= total %></b>
+    <div class="card mb-4"> 
+        <div class="card-body">
+            <h2> SUBTOTAL: $<%= total %> </h2>
+        </div>
+    </div>
 
     <form action="/checkout">
         <button class="btn btn-primary">Checkout</button>

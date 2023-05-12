@@ -1,0 +1,27 @@
+<% layout('layout/boilerplate') %>
+
+<div class="container">
+    <h1 class="my-4">Customer!</h1>
+    <div class="row">
+      <% for(let user of users) {
+            if (user.role === 'customer' && user.warn && user.warn >= 3) { %>
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card bg-danger text-white">
+            <div class="card-body">
+              <h5 class="card-title"> <%= user.username %> </h5>
+              <p class="card-text">Warnings: <%= user.warn %></p>
+              <form action="/customer/<%= user._id %>?_method=DELETE" method="POST">
+                <button type="submit" class="btn btn-light">Ban</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% } } %>
+    </div>
+  </div>
+  
+  
+  
+  
+  
+  

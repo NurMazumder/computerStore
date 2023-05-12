@@ -23,6 +23,10 @@ const UserSchema = new Schema({
     },
     status: {
         type: String
+    },
+    wallet: {
+        type: Number,
+        default: '0'
     }
 });
 
