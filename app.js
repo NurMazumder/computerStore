@@ -139,6 +139,9 @@ app.post('/computerItems/:id/reviews', catchAsync(async (req, res) => {
         req.flash('error', 'You must be logged in to post a review with bad words.');
         return res.redirect(`/computerItems/${computerItem._id}`);
     }
+    else if (filteredBody !== review.body) {
+        req.flash('error', 'Bad language detected. You have been issued warning(s).');
+    }
     review.body = filteredBody;
     computerItem.reviews.push(review);
     await review.save();
@@ -359,15 +362,24 @@ app.delete('/builds/:id', isLoggedIn, async (req, res) => {
 app.post('/builds/:id/reviews', catchAsync(async (req, res) => {
     const computerBuild = await ComputerBuilds.findById(req.params.id);
     const review = new Review(req.body.review);
-     if (req.isAuthenticated()) {
+    if (req.isAuthenticated()) {
         review.author = req.user._id;
     } else {
         review.author = null;
     }
-    review.body = filterBadWords(review.body); // Filter bad words in the comment
-    computerBuild.reviews.push(review);
+    const filteredBody = filterBadWords(review.body, req.user); // Filter bad words in the comment
+    if (!req.isAuthenticated() && filteredBody !== review.body) {
+        // User is not logged in and review has bad words, do not save
+        req.flash('error', 'You must be logged in to post a review with bad words.');
+        return res.redirect(`/builds/${computerBuild._id}`);
+    }
+    else if (filteredBody !== review.body) {
+        req.flash('error', 'Bad language detected. You have been issued warning(s).');
+    }
+    review.body = filteredBody;
+    computerItem.reviews.push(review);
     await review.save();
-    await computerBuild.save();
+    await computerItem.save();
     res.redirect(`/builds/${computerBuild._id}`);
 }));
 
@@ -473,7 +485,6 @@ app.get('/checkout', isLoggedIn, catchAsync(async(req, res) => {
         }
         itemList.push(item);
     }
-
     res.render('Order/checkout', { itemList });
 }));
 
@@ -481,7 +492,14 @@ const Order = require('./models/orderModel');
 
 app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     const userCart = await Cart.findOne({userID: req.user._id});
-
+    if(req.user.wallet < userCart.total){
+        req.user.warn++;
+        await req.user.save()
+        req.flash('error', 'Insufficient balance. Please add more money before placing the order. You have been issued a warning.');
+        return res.redirect(`/account/${req.user._id}`);
+    }
+    req.user.wallet -= userCart.total;
+    await req.user.save();
     const orderAddress = []; // order delivery address
     orderAddress.push(req.body.name, req.body.address, req.body.city, req.body.state, String(req.body.zip));
 
