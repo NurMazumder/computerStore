@@ -1,3 +1,10 @@
+<style>
+    .search-bar {
+        margin-right: 600px;  /* Adjust as needed */
+         margin-top: 5px;    /* Adjust as needed */
+    }
+</style>
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">GroupQ</a>
@@ -11,14 +18,13 @@
                 <a class="nav-link" href="/builds">Builds</a>
                 <% if (currentUser && currentUser.role==='admin' ) { %>
                     <a class="nav-link" href="/computerItems/new">Add Product</a>
-                <% } %>
-            </div>
+                <% } %>           
+                <div class="col-md-3 text-end search-bar">
+                    <form action="/search"  method="GET">
+                        <input type="search" name="q" class="form-control" placeholder="Search..." aria-label="Search">
+                    </form>
+                </div>
 
-            <div class="col-md-3 text-end search-bar">
-                <form method="GET" action="/search">
-                    <input type="search" name="q" class="form-control" placeholder="Search..." aria-label="Search">
-                </form>
-            </div>  
             <ul class="navbar-nav ms-auto">
                 <% if(!currentUser) { %>
                     <li class="nav-item">
