@@ -17,7 +17,6 @@ const LocalStrategy = require('passport-local'); // <-- here
 const User = require('./models/user');
 const { isLoggedIn } = require('./middleware');
 const user = require('./models/user');
-const Order = require('./models/orderModel');
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
@@ -67,19 +66,27 @@ app.use((req, res, next) => {
     res.locals.error = req.flash('error');
     next();
 });
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Function to fetch the latest computer builds
+async function getLatestBuilds() {
+    const computerBuild = await ComputerBuilds.find().populate('reviews');
 
+    // Sort the computer builds by average rating in descending order
+    const topBuilds = computerBuild.sort((a, b) => {
+        const aAvgRating = a.reviews.reduce((acc, cur) => acc + cur.rating, 0) / a.reviews.length;
+        const bAvgRating = b.reviews.reduce((acc, cur) => acc + cur.rating, 0) / b.reviews.length;
+        return bAvgRating - aAvgRating;
+    });
+
+    return topBuilds;
+}
+
+// Route handler for the home page
 app.get('/', async (req, res) => {
     try {
-        // Get the latest computer builds from the database
-        const computerBuild = await ComputerBuilds.find().populate('reviews');
-
-        // Sort the computer builds by average rating in descending order
-        const topBuilds = computerBuild.sort((a, b) => {
-            const aAvgRating = a.reviews.reduce((acc, cur) => acc + cur.rating, 0) / a.reviews.length;
-            const bAvgRating = b.reviews.reduce((acc, cur) => acc + cur.rating, 0) / b.reviews.length;
-            return bAvgRating - aAvgRating;
-        });
+        // Fetch the latest computer builds
+        const topBuilds = await getLatestBuilds();
 
         // Render the home page with the latest computer builds
         res.render('home', { computerBuild: topBuilds });
@@ -88,7 +95,6 @@ app.get('/', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
 
 // computer Items
 
@@ -139,11 +145,7 @@ app.delete('/computerItems/:id', catchAsync(async (req, res) => {
     res.redirect(`/computerItems`);
 }));
 
-
-
 // review for compter Items
-
-
 
 app.post('/computerItems/:id/reviews', catchAsync(async (req, res) => {
     const computerItem = await ComputerItems.findById(req.params.id);
@@ -201,8 +203,8 @@ app.post('/register', catchAsync(async (req, res, next) => {
         const { email, username, password } = req.body;
         const user = new User({ email, username });
         const registeredUser = await User.register(user, password);
-
-        const userCart = new Cart({ userID: user._id }); // create user cart
+                
+        const userCart = new Cart({userID: user._id}); // create user cart
         await userCart.save();
 
         req.login(registeredUser, err => {
@@ -240,13 +242,13 @@ app.get('/logout', (req, res) => {
 })
 
 //Account Management
-app.get('/manage', isLoggedIn, catchAsync(async (req, res) => {
+app.get('/manage',isLoggedIn, catchAsync(async (req, res) => {
     const users = await User.find({});
     res.render('Users/manage', { users })
 }))
 
 
-app.get('/manage/:id', isLoggedIn, catchAsync(async (req, res) => {
+app.get('/manage/:id', isLoggedIn,catchAsync(async (req, res) => {
     const user = await User.findById(req.params.id);
     res.render('Users/edit', { user });
 }));
@@ -259,12 +261,12 @@ app.put('/manage/:id', isLoggedIn, catchAsync(async (req, res) => {
     res.redirect('/manage');
 }));
 
-app.get('/memo', isLoggedIn, catchAsync(async (req, res) => {
+app.get('/memo',isLoggedIn, catchAsync(async (req, res) => {
     const users = await User.find({});
     res.render('Users/memo', { users })
 }))
 
-app.get('/customer', isLoggedIn, catchAsync(async (req, res) => {
+app.get('/customer',isLoggedIn, catchAsync(async (req, res) => {
     const users = await User.find({});
     res.render('Users/customer', { users })
 }))
@@ -273,11 +275,11 @@ app.delete('/customer/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     await User.findByIdAndDelete(id);
     res.redirect('/customer');
-}));
+  }));
 
 
 
-app.get('/account/:id', isLoggedIn, catchAsync(async (req, res) => {
+app.get('/account/:id', isLoggedIn,catchAsync(async (req, res) => {
     const user = await User.findById(req.params.id);
     res.render('Users/account', { user });
 }));
@@ -291,10 +293,10 @@ app.put('/account/:id', isLoggedIn, catchAsync(async (req, res) => {
     await user.save();
     req.flash('success', 'Successfully updated');
     res.redirect(`/account/${id}`);
-}));
+  }));
 
 
-app.get('/employee', isLoggedIn, catchAsync(async (req, res) => {
+app.get('/employee',isLoggedIn, catchAsync(async (req, res) => {
     const users = await User.find({});
     res.render('Users/employee', { users })
 }))
@@ -304,9 +306,9 @@ app.delete('/employee/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     await User.findByIdAndDelete(id);
     res.redirect('/employee');
-}));
+  }));
 
-// PC builder 
+  // PC builder 
 
 app.get('/builds', async (req, res) => {
     const computerBuild = await ComputerBuilds.find({});
@@ -315,22 +317,22 @@ app.get('/builds', async (req, res) => {
 
 app.get('/builds/new', isLoggedIn, async (req, res) => {
     const computerItem = await ComputerItems.find({});
-    res.render('computerBuilds/new', { computerItem });
+    res.render('computerBuilds/new', {computerItem});
 });
 
-app.post('/builds', isLoggedIn, async (req, res) => {
+app.post('/builds', isLoggedIn, async(req, res) => { 
     const newBuild = new ComputerBuilds(req.body);
     console.log(req.body);
 
     var total = 0; // Find all items and their prices to calculate build price
-    const mobo = await ComputerItems.find({ name: req.body.mobo });
-    const cpu = await ComputerItems.find({ name: req.body.cpu });
-    const gpu = await ComputerItems.find({ name: req.body.gpu });
-    const memory = await ComputerItems.find({ name: req.body.memory });
-    const storage = await ComputerItems.find({ name: req.body.storage });
-    const fan = await ComputerItems.find({ name: req.body.fan });
-    const psu = await ComputerItems.find({ name: req.body.psu });
-    const housing = await ComputerItems.find({ name: req.body.housing });
+    const mobo = await ComputerItems.find({name: req.body.mobo});
+    const cpu = await ComputerItems.find({name: req.body.cpu});
+    const gpu = await ComputerItems.find({name: req.body.gpu});
+    const memory = await ComputerItems.find({name: req.body.memory});
+    const storage = await ComputerItems.find({name: req.body.storage});
+    const fan = await ComputerItems.find({name: req.body.fan});
+    const psu = await ComputerItems.find({name: req.body.psu});
+    const housing = await ComputerItems.find({name: req.body.housing});
 
     total += mobo[0].price + cpu[0].price;
     total += gpu[0].price;
@@ -397,9 +399,9 @@ app.post('/builds/:id/reviews', catchAsync(async (req, res) => {
         req.flash('error', 'Bad language detected. You have been issued warning(s).');
     }
     review.body = filteredBody;
-    computerBuild.reviews.push(review);
+    computerItem.reviews.push(review);
     await review.save();
-    await computerBuild.save();
+    await computerItem.save();
     res.redirect(`/builds/${computerBuild._id}`);
 }));
 
@@ -411,19 +413,19 @@ app.delete('/builds/:id/reviews/:reviewId', isLoggedIn, catchAsync(async (req, r
     res.redirect(`/builds/${id}`);
 }))
 
-
+  
 // Cart
 
-app.get('/cart', isLoggedIn, catchAsync(async (req, res) => {
+app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
     // get actual store objects from IDs in cart object
-    const userCart = await Cart.findOne({ userID: req.user._id }); // find cart of user
+    const userCart = await Cart.findOne({userID: req.user._id}); // find cart of user
     const itemList = [];
-    for (let i = 0; i < userCart.items.length; i++) {
+    for(let i = 0; i < userCart.items.length; i++){
         var item;
-        if (await ComputerItems.findById(userCart.items[i]) !== null) { // item is a store product
+        if(await ComputerItems.findById(userCart.items[i]) !== null){ // item is a store product
             item = await ComputerItems.findById(userCart.items[i]);
         }
-        else if (await ComputerBuilds.findById(userCart.items[i]) !== null) { // item is a build
+        else if(await ComputerBuilds.findById(userCart.items[i]) !== null){ // item is a build
             item = await ComputerBuilds.findById(userCart.items[i]);
         }
         itemList.push(item);
@@ -437,22 +439,22 @@ app.post('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { quantity } = req.body;
     console.log(id);
 
-    const userCart = await Cart.findOne({ userID: req.user._id }); // find cart of user
+    const userCart = await Cart.findOne({userID: req.user._id}); // find cart of user
     var item;
-    if (await ComputerItems.findById(id) !== null) { // item is a store product
+    if(await ComputerItems.findById(id) !== null){ // item is a store product
         item = await ComputerItems.findById(id);
     }
-    else if (await ComputerBuilds.findById(id) !== null) { // item is a build
+    else if(await ComputerBuilds.findById(id) !== null){ // item is a build
         item = await ComputerBuilds.findById(id);
     }
     console.log(item.price);
-    console.log("Before:", userCart.items);
-    for (let i = 0; i < quantity; i++) { // add desired quantity of item
+    console.log("Before:",userCart.items);
+    for(let i = 0; i < quantity; i++){ // add desired quantity of item
         userCart.items.push(id); // convert to string
         userCart.total += item.price;
     }
     await userCart.save();
-
+    
     req.flash('success', 'Successfully added item(s) to cart.');
     console.log("After:", userCart.items);
     console.log(userCart.total);
@@ -463,22 +465,22 @@ app.post('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
 app.put('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
 
-    const userCart = await Cart.findOne({ userID: req.user._id });
+    const userCart = await Cart.findOne({userID: req.user._id});
     const itemIndex = userCart.items.indexOf(id);
     console.log("Item found at index", itemIndex);
 
     var item;
-    if (await ComputerItems.findById(id) !== null) { // item is a store product
+    if(await ComputerItems.findById(id) !== null){ // item is a store product
         item = await ComputerItems.findById(id);
     }
-    else if (await ComputerBuilds.findById(id) !== null) { // item is a build
+    else if(await ComputerBuilds.findById(id) !== null){ // item is a build
         item = await ComputerBuilds.findById(id);
     }
     console.log(item);
 
-    console.log("Cart before:", userCart.items)
+    console.log("Cart before:",userCart.items)
     userCart.items.splice(itemIndex, 1);
-    console.log("Cart after:", userCart.items);
+    console.log("Cart after:",userCart.items);
     console.log("Total before:", userCart.total);
     userCart.total -= item.price;
     console.log("Total after:", userCart.total);
@@ -488,19 +490,19 @@ app.put('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
     res.redirect(`/cart`);
 }));
 
-app.get('/checkout', isLoggedIn, catchAsync(async (req, res) => {
-    const userCart = await Cart.findOne({ userID: req.user._id });
-    if (userCart.items.length < 1) {
+app.get('/checkout', isLoggedIn, catchAsync(async(req, res) => {
+    const userCart = await Cart.findOne({userID: req.user._id});
+    if(userCart.items.length < 1){
         req.flash('error', 'Your cart is empty!');
         return res.redirect('/cart');
     }
     const itemList = [];
-    for (let i = 0; i < userCart.items.length; i++) {
+    for(let i = 0; i < userCart.items.length; i++){
         var item;
-        if (await ComputerItems.findById(userCart.items[i]) !== null) { // item is a store product
+        if(await ComputerItems.findById(userCart.items[i]) !== null){ // item is a store product
             item = await ComputerItems.findById(userCart.items[i]);
         }
-        else if (await ComputerBuilds.findById(userCart.items[i]) !== null) { // item is a build
+        else if(await ComputerBuilds.findById(userCart.items[i]) !== null){ // item is a build
             item = await ComputerBuilds.findById(userCart.items[i]);
         }
         itemList.push(item);
@@ -508,10 +510,11 @@ app.get('/checkout', isLoggedIn, catchAsync(async (req, res) => {
     res.render('Order/checkout', { itemList });
 }));
 
+const Order = require('./models/orderModel');
 
-app.post('/checkout', isLoggedIn, catchAsync(async (req, res) => {
-    const userCart = await Cart.findOne({ userID: req.user._id });
-    if (req.user.wallet < userCart.total) {
+app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
+    const userCart = await Cart.findOne({userID: req.user._id});
+    if(req.user.wallet < userCart.total){
         req.user.warn++;
         await req.user.save()
         req.flash('error', 'Insufficient balance. Please add more money before placing the order. You have been issued a warning.');
@@ -523,12 +526,12 @@ app.post('/checkout', isLoggedIn, catchAsync(async (req, res) => {
     orderAddress.push(req.body.name, req.body.address, req.body.city, req.body.state, String(req.body.zip));
 
     const itemList = [];
-    for (let itemID of userCart.items) {
+    for(let itemID of userCart.items){
         var item;
-        if (await ComputerItems.findById(itemID) !== null) { // item is a store product
+        if(await ComputerItems.findById(itemID) !== null){ // item is a store product
             item = await ComputerItems.findById(itemID);
         }
-        else if (await ComputerBuilds.findById(itemID) !== null) { // item is a build
+        else if(await ComputerBuilds.findById(itemID) !== null){ // item is a build
             item = await ComputerBuilds.findById(itemID);
         }
         console.log(item);
@@ -552,12 +555,11 @@ app.post('/checkout', isLoggedIn, catchAsync(async (req, res) => {
 }));
 
 
-app.get('/order/:id', isLoggedIn, catchAsync(async (req, res) => {
-    const { id } = req.params;
-    console.log({ id });
+app.get('/order/:id', isLoggedIn, catchAsync(async(req, res) => {
+    const {id} = req.params;
+    console.log({id});
     const thisOrder = await Order.findById(id);
     console.log(thisOrder);
-
     const orderBuilds = [];
     for(let itemID of thisOrder.order){
         var item;
@@ -574,6 +576,10 @@ app.get('/order/:id', isLoggedIn, catchAsync(async (req, res) => {
 app.get('/contact', (req, res) => {
     res.render('contact');
 });
+
+const searchRoutes = require('./routes/searchRoutes');
+app.use('/', searchRoutes);
+
 
 app.all('*', (req, res, next) => {
     next(new ExpressError('Page Not Found', 404))

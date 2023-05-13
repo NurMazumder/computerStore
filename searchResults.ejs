@@ -1,0 +1,9 @@
+<h1>Search Results</h1>
+<% if (products.length > 0) { %>
+    <% products.forEach(function(product) { %>
+        <h2><%= product.name %></h2>
+        <p><%= product.description %></p>
+    <% }) %>
+<% } else { %>
+    <p>No results found</p>
+<% } %>

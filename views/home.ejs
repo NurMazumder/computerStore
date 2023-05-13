@@ -10,45 +10,39 @@
     </head>
 
     <body>
-        <h1>Top Builds</h1>
-        <div class="row">
-            <% const topBuilds=computerBuild.sort((a, b)=> {
+        <h1>TOP BUILDS</h1>
+        <div class="row mt-5">
+            <% computerBuild.sort((a, b)=> {
                 const aAvgRating = a.reviews.reduce((acc, cur) => acc + cur.rating, 0) / a.reviews.length;
                 const bAvgRating = b.reviews.reduce((acc, cur) => acc + cur.rating, 0) / b.reviews.length;
-                return aAvgRating - bAvgRating;
-                }).slice(0, 4).reverse(); %>
-
-                <% topBuilds.forEach((item, index)=> { %>
-                    <% if (index===0 || index % 3===0) { %>
-                        <div class="row mt-5">
+                return bAvgRating - aAvgRating;
+                }).slice(0, 4).forEach((item) => { %>
+                <div class="col-md-3">
+                    <a href="/builds/<%= item._id %>">
+                        <div class="card mb-4">
+                            <div class="card-image">
+                                <img src="<%= item.imgURL %>" class="card-img-top img-fluid square-image"
+                                    alt="<%= item._id %>">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <%= item.name %>
+                                </h5>
+                                <h5 class="card-title" style="font-size: small;">
+                                    (Build no. <%= item._id %> )
+                                </h5>
+                                <p class="card-text">$<%= item.price %>
+                                </p>
+                                <p class="card-text">Avg Rating: <%= (item.reviews.reduce((acc, cur)=>
+                                        acc + cur.rating, 0) / item.reviews.length).toFixed(1) %> stars
+                                </p>
+                            </div>
                         </div>
-                        <div class="row mt-3">
-                            <% } %>
-                                <div class="col-md-3">
-                                    <a href="/builds/<%= item._id %>">
-                                        <div class="card mb-4">
-                                            <div class="card-image">
-                                                <img src="<%= item.imgURL %>"
-                                                    class="card-img-top img-fluid square-image" alt="<%= item._id %>">
-                                            </div>
-                                            <div class="card-body">
-                                                <h5 class="card-title">
-                                                    <%= item.name %>
-                                                </h5>
-                                                <h5 class="card-title" style="font-size: small;">
-                                                    (Build no. <%= item._id %> )
-                                                </h5>
-                                                <p class="card-text">$<%= item.price %>
-                                                </p>
-                                                <p class="card-text">Avg Rating: <%= (item.reviews.reduce((acc, cur)=>
-                                                        acc + cur.rating, 0) / item.reviews.length).toFixed(1) %> stars
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <% }) %>
-                        </div>
+                    </a>
+                </div>
+                <% }); %>
+        </div>
     </body>
+
 
     </html>
