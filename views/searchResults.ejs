@@ -1,29 +1,14 @@
-<% layout('layout/boilerplate') %>
-
 <h1>Search Results</h1>
 <% if (products.length > 0) { %>
-    <div class="row mt-3">
-    <% for(let computerItem of products) { %>
-        <div class="col-md-3">
-            <a href="/computerItems/<%= computerItem._id %>">
-                <div class="card mb-4">
-                    <div class="card-image">
-                        <img src="<%= computerItem.imgURL %>"
-                            class="card-img-top img-fluid square-image"
-                            alt="<%= computerItem.name %>">
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <%= computerItem.name %>
-                        </h5>
-                        <p class="card-text">$<%= computerItem.price %>
-                        </p>
-                    </div>
-                </div>
+    <% products.forEach(function(product) { %>
+        <h2>
+            <a href="/computerItems/<%= product._id %>">
+                <%= product.name %>
             </a>
-        </div>
-    <% } %>
-    </div>
+        </h2>
+        <img src="<%= product.imgURL %>" alt="<%= product.name %>">
+        <p><%= product.description %></p>
+    <% }) %>
 <% } else { %>
-    <p>No results found!</p>
+    <p>No results found</p>
 <% } %>
