@@ -22,7 +22,7 @@
                             </form>
                             <% } %>
                     </div>
-                    <% if (currentUser) { %>
+                    <% if (currentUser && (currentUser.role==='admin' || currentUser.role==='customer')) { %>
                         <form action="/cart/<%= computerItem._id %>" method="POST">
                             <label for="quantity">Quantity</label>
                             <input name="quantity" id="quantity" type="number" min='1' value="1" style="width: 40px">

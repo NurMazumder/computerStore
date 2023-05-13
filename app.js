@@ -189,7 +189,7 @@ app.post('/register', catchAsync(async (req, res, next) => {
 
         req.login(registeredUser, err => {
             if (err) return next(err);
-            req.flash('success', 'Welcome!');
+            req.flash('success', 'Welcome! We have received your application. Please wait for the results.');
             res.redirect('/computerItems');
         })
     } catch (e) {
@@ -379,9 +379,9 @@ app.post('/builds/:id/reviews', catchAsync(async (req, res) => {
         req.flash('error', 'Bad language detected. You have been issued warning(s).');
     }
     review.body = filteredBody;
-    computerItem.reviews.push(review);
+    computerBuild.reviews.push(review);
     await review.save();
-    await computerItem.save();
+    await computerBuild.save();
     res.redirect(`/builds/${computerBuild._id}`);
 }));
 
@@ -540,8 +540,18 @@ app.get('/order/:id', isLoggedIn, catchAsync(async(req, res) => {
     console.log({id});
     const thisOrder = await Order.findById(id);
     console.log(thisOrder);
+
+    const orderBuilds = [];
+    for(let itemID of thisOrder.order){
+        var item;
+        if(await ComputerBuilds.findById(itemID) !== null){ // item is a build
+            item = await ComputerBuilds.findById(itemID);
+        }
+        console.log(item);
+        orderBuilds.push(item);
+    }
     
-    res.render('Order/order', { thisOrder });
+    res.render('Order/order', { thisOrder, orderBuilds });
 }));
 
 app.get('/contact', (req, res) => {

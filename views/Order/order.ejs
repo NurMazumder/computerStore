@@ -13,6 +13,7 @@
     <h1>THANK YOU!</h1>
     <h2>ORDER NUMBER: <%= thisOrder._id %></h2>
     <h2>YOUR ITEMS:</h2>
+
     <% for(let item of thisOrder.order) { %>
         <div class="col-md-3">
             <div class="card mb-4">
@@ -34,6 +35,37 @@
             <h2> ORDER TOTAL: $<%= thisOrder.total %> </h2>
         </div>
     </div>
+    Please consider leaving a review for the following builds, if you haven't already:
+    <% for (let computerBuild of orderBuilds) { %>
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-image">
+                    <img src="<%= computerBuild.imgURL %>"
+                        class="card-img-top img-fluid square-image"
+                        alt="<%= computerBuild.name %>">
+                </div>
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <%= computerBuild.name %>
+                    </h5>
+                </div>
+            </div>
+    </div>
+    <form action="/builds/<%= computerBuild._id %>/reviews" method="POST" novalidate
+        class="mb-3 validated-form">
+        <h2>Review</h2>
+        <div class="mb-3">
+            <label class="form-label" for="rating">Rating</label>
+            <input type="range" min="1" max="5" name="review[rating]" id="rating" class="form-range">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="body">Comment</label>
+            <textarea class="form-control" name="review[body]" id="body" cols="30" rows="3"
+                required></textarea>
+        </div>
+        <button class="btn btn-success">Submit</button>
+    </form>
+    <% } %>
 </body>
 
 </html>
