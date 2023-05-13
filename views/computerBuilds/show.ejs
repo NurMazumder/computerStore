@@ -36,7 +36,7 @@
                                                 <%= computerBuild.housing %>
                 </h1>
                 <div class="d-flex">
-                    <% if if (currentUser && (currentUser.role==='admin' || currentUser.role==='customer')) { %>
+                    <% if (currentUser && (currentUser.role==='admin' || currentUser.role==='customer')) { %>
                         <form action="/builds/<%= computerBuild._id %>?_method=DELETE" method="POST">
                             <button class="btn btn-danger">Delete</button>
                         </form>

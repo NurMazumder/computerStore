@@ -1,0 +1,29 @@
+<% layout('layout/boilerplate') %>
+
+<h1>Search Results</h1>
+<% if (products.length > 0) { %>
+    <div class="row mt-3">
+    <% for(let computerItem of products) { %>
+        <div class="col-md-3">
+            <a href="/computerItems/<%= computerItem._id %>">
+                <div class="card mb-4">
+                    <div class="card-image">
+                        <img src="<%= computerItem.imgURL %>"
+                            class="card-img-top img-fluid square-image"
+                            alt="<%= computerItem.name %>">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <%= computerItem.name %>
+                        </h5>
+                        <p class="card-text">$<%= computerItem.price %>
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    <% } %>
+    </div>
+<% } else { %>
+    <p>No results found!</p>
+<% } %>
