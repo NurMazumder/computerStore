@@ -66,6 +66,8 @@ app.use((req, res, next) => {
     res.locals.error = req.flash('error');
     next();
 });
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 
 app.get('/', (req, res) => {
