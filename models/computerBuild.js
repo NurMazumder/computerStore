@@ -43,7 +43,7 @@ const computerBuildSchema = new Schema({
         type: String,
         default: ''
     },
-    name:{
+    name: {
         type: String,
     },
     author: {

@@ -1,9 +1,9 @@
 <% layout('layout/boilerplate') %>
     <h1>BUILDS</h1>
     <div>
-        <% if (currentUser) { %>
-        <a href="/builds/new">Create Build</a>
-        <% } %>
+        <% if (currentUser && currentUser.role !=='applicant' ) { %>
+            <a href="/builds/new">Create Build</a>
+            <% } %>
     </div>
 
     <div class="row">
@@ -11,30 +11,30 @@
             <% for (let item of computerBuild) { %>
                 <% if (item.type !==currentType) { %>
 
-        <div class="row mt-5">
-        </div>
-        <div class="row mt-3">
-            <% } %>
-                <div class="col-md-3">
-                    <a href="/builds/<%= item._id %>">
-                        <div class="card mb-4">
-                            <div class="card-image">
-                                <img src="<%= item.imgURL %>" class="card-img-top img-fluid square-image"
-                                    alt="<%= item._id %>">
+                    <div class="row mt-5">
+                    </div>
+                    <div class="row mt-3">
+                        <% } %>
+                            <div class="col-md-3">
+                                <a href="/builds/<%= item._id %>">
+                                    <div class="card mb-4">
+                                        <div class="card-image">
+                                            <img src="<%= item.imgURL %>" class="card-img-top img-fluid square-image"
+                                                alt="<%= item._id %>">
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <%= item.name %>
+                                            </h5>
+                                            <h5 class="card-title" style="font-size: small;">
+                                                (Build no. <%= item._id %> )
+                                            </h5>
+                                            <p class="card-text">$<%= item.price %>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <%= item.name %>
-                                </h5>
-                                <h5 class="card-title" style="font-size: small;">
-                                     (Build no. <%= item._id %> )
-                                </h5>
-                                <p class="card-text">$<%= item.price %>
-                                </p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <% currentType=item.type; %>
-                    <% } %>
-        </div>
+                            <% currentType=item.type; %>
+                                <% } %>
+                    </div>
