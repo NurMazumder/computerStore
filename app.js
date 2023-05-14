@@ -12,6 +12,7 @@ const flash = require('connect-flash');
 const ComputerItems = require('./models/computerStore');
 const ComputerBuilds = require('./models/ComputerBuild');
 const Cart = require('./models/cartModel');
+const CustomerService = require('./models/customerService');
 const passport = require('passport');
 const LocalStrategy = require('passport-local'); // <-- here
 const User = require('./models/user');
@@ -765,6 +766,18 @@ app.post('/order/buildFromOrder/:id', isLoggedIn, catchAsync(async(req, res) => 
 
 app.get('/contact', (req, res) => {
     res.render('contact');
+});
+
+app.post('/contact', async(req, res) => {
+    const inquiry = new CustomerService({
+        email: req.body.email,
+        order: req.body.order,
+        title: req.body.title,
+        message: req.body.message
+    });
+    await inquiry.save();
+    req.flash('success', "Inquiry received!");
+    res.redirect('/');
 });
 
 const searchRoutes = require('./routes/searchRoutes');
