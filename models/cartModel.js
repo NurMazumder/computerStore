@@ -14,6 +14,10 @@ const cartSchema = new Schema({
         type: mongoose.Types.ObjectId,
         default: null
     }],
+    containsBuild: [{
+        type: mongoose.Types.ObjectId,
+        default: null
+    }],
 });
 
 module.exports = mongoose.model('Cart', cartSchema);

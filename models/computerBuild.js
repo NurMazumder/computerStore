@@ -46,6 +46,9 @@ const computerBuildSchema = new Schema({
     name: {
         type: String,
     },
+    category: {
+        type: String,
+    },
     author: {
         type: String,
     },

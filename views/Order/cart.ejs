@@ -46,7 +46,47 @@
     </div>
 
     <form action="/checkout">
+        <% if(!incompatibility) { %>
+        <% let containsBuild = containsMobo && containsCPU && containsGPU && containsMemory && containsStorage && containsFan && containsPSU && containsCase; %>
+        <% if(!containsBuild){ %>
+            Remaining items needed to create a build:
+            <br>
+            <% if(!containsMobo){ %>
+                * Motherboard
+                <br>
+            <% } if(!containsCPU){ %>
+                * CPU
+                <br>
+            <% } if(!containsGPU){ %>
+                * GPU
+                <br>
+            <% } if(!containsMemory){ %>
+                * Memory
+                <br>
+            <% } if(!containsStorage){ %>
+                * Storage
+                <br>
+            <% } if(!containsFan){ %>
+                * Cooling
+                <br>
+            <% } if(!containsPSU){ %>
+                * PSU
+                <br>
+            <% } if(!containsCase){ %>
+                * Case
+                <br>
+            <% } %>
+        <% } else { %>
+            Your item contains a compatible PC build!
+            <br>
+        <% } %>
+        
+        
         <button class="btn btn-primary">Checkout</button>
+        <% } else { %>
+            Your order contains incompatibility between two or more parts. You cannot place an order with these items together.
+            <br>
+        <% } %>
     </form>
 </body>
 

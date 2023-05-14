@@ -334,6 +334,20 @@ app.post('/builds', isLoggedIn, async(req, res) => {
     const psu = await ComputerItems.find({name: req.body.psu});
     const housing = await ComputerItems.find({name: req.body.housing});
 
+    console.log(mobo[0].brand);
+    console.log(cpu[0].brand);
+    console.log(gpu[0].brand);
+
+    // detect incompatibility
+    if((mobo[0].brand === 'ASUS' && cpu[0].brand !== 'INTEL') || (mobo[0].brand !== 'ASUS' && cpu[0].brand === 'INTEL')){
+        req.flash('error', 'Incompatibilities detected: motherboard and CPU are incompatible. Please try a different combination.');
+        return res.redirect(`/builds/new`);
+    }
+    if((mobo[0].brand.toLowerCase() !== gpu[0].brand.toLowerCase())){
+        req.flash('error', 'Incompatibilities detected: motherboard and GPU are incompatible. Please try a different combination.');
+        return res.redirect(`/builds/new`);
+    }
+
     total += mobo[0].price + cpu[0].price;
     total += gpu[0].price;
     total += memory[0].price;
@@ -344,6 +358,7 @@ app.post('/builds', isLoggedIn, async(req, res) => {
 
     newBuild.price = total;
     newBuild.imgURL = housing[0].imgURL; // Use case as build image
+    newBuild.category = req.body.category;
     if (req.isAuthenticated()) {
         newBuild.author = req.user.username;
     } else {
@@ -419,11 +434,74 @@ app.delete('/builds/:id/reviews/:reviewId', isLoggedIn, catchAsync(async (req, r
 app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
     // get actual store objects from IDs in cart object
     const userCart = await Cart.findOne({userID: req.user._id}); // find cart of user
+
     const itemList = [];
+
+    var buildComponents = 8;
+    var containsMobo = false;
+    var containsCPU = false;
+    var containsGPU = false;
+    var containsMemory = false;
+    var containsStorage = false;
+    var containsFan = false;
+    var containsPSU = false;
+    var containsCase = false;
+    const buildItems = [];
+
+    var moboBrand;
+    var cpuBrand;
+    var gpuBrand;
+    var incompatibility = false;
+
     for(let i = 0; i < userCart.items.length; i++){
         var item;
         if(await ComputerItems.findById(userCart.items[i]) !== null){ // item is a store product
             item = await ComputerItems.findById(userCart.items[i]);
+            switch(item.type){
+                case 'motherboard':
+                    containsMobo = true;
+                    moboBrand = item.brand;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+                case 'CPU':
+                    containsCPU = true;
+                    cpuBrand = item.brand;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+                case 'GPU':
+                    containsGPU = true;
+                    gpuBrand = item.brand;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+                case 'MEMORY':
+                    containsMemory = true;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+                case 'STORAGE':
+                    containsStorage = true;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+                case 'FAN':
+                    containsFan = true;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+                case 'PSU':
+                    containsPSU = true;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+                case 'CASE':
+                    containsCase = true;
+                    buildComponents--;
+                    buildItems.push(item._id);
+                    break;
+            }
         }
         else if(await ComputerBuilds.findById(userCart.items[i]) !== null){ // item is a build
             item = await ComputerBuilds.findById(userCart.items[i]);
@@ -431,7 +509,21 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
         itemList.push(item);
     }
 
-    res.render('Order/cart', { itemList });
+    if(containsMobo && containsCPU && (moboBrand === 'ASUS' && cpuBrand !== 'INTEL') || (moboBrand !== 'ASUS' && cpuBrand === 'INTEL')){
+        incompatibility = true;
+    }
+    if(containsMobo && containsGPU && (moboBrand.toLowerCase() !== gpuBrand.toLowerCase())){
+        incompatibility = true;
+    }
+
+    if(containsMobo && containsCPU && containsGPU && containsMemory && containsStorage && containsFan && containsPSU && containsCase && buildComponents === 0)
+        userCart.containsBuild = buildItems;
+    else
+        userCart.containsBuild = [];
+    await userCart.save();
+
+    console.log(userCart.containsBuild);
+    res.render('Order/cart', { itemList, incompatibility, containsMobo, containsCPU, containsGPU, containsMemory, containsStorage, containsFan, containsPSU, containsCase });
 }));
 
 app.post('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
@@ -542,14 +634,16 @@ app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     const newOrder = new Order({
         address: orderAddress,
         order: itemList,
-        total: userCart.total
+        total: userCart.total,
+        containsBuild: userCart.containsBuild
     })
     console.log(newOrder);
     await newOrder.save();
 
-    userCart.total = 0; // reset user's cart
-    userCart.items = [];
-    await userCart.save();
+//    userCart.total = 0; // reset user's cart
+//    userCart.items = [];
+//    userCart.containsBuild = [];
+//    await userCart.save();
 
     res.redirect(`/order/${newOrder._id}`);
 }));
@@ -560,17 +654,95 @@ app.get('/order/:id', isLoggedIn, catchAsync(async(req, res) => {
     console.log({id});
     const thisOrder = await Order.findById(id);
     console.log(thisOrder);
-    const orderBuilds = [];
-    for(let itemID of thisOrder.order){
-        var item;
-        if(await ComputerBuilds.findById(itemID) !== null){ // item is a build
-            item = await ComputerBuilds.findById(itemID);
-        }
-        console.log(item);
-        orderBuilds.push(item);
-    }
     
-    res.render('Order/order', { thisOrder, orderBuilds });
+    res.render('Order/order', { thisOrder });
+}));
+
+app.post('/order/buildFromOrder/:id', isLoggedIn, catchAsync(async(req, res) => {
+    const {id} = req.params;
+    const thisOrder = await Order.findById(id);
+    console.log(thisOrder);
+
+    var moboName;
+    var cpuName;
+    var gpuName;
+    var memoryName;
+    var storageName;
+    var fanName;
+    var psuName;
+    var caseName;
+    var buildPrice = 0;
+    var buildImg;
+
+    for(let itemID of thisOrder.containsBuild){
+        const item = await ComputerItems.findById(itemID);
+        console.log(item);
+        switch(item.type){
+            case 'motherboard':
+                moboName = item.name;
+                buildPrice += item.price;
+                break;
+            case 'CPU':
+                cpuName = item.name;
+                buildPrice += item.price;
+                break;
+            case 'GPU':
+                gpuName = item.name;
+                buildPrice += item.price;
+                break;
+            case 'MEMORY':
+                memoryName = item.name;
+                buildPrice += item.price;
+                break;
+            case 'STORAGE':
+                storageName = item.name;
+                buildPrice += item.price;
+                break;
+            case 'FAN':
+                fanName = item.name;
+                buildPrice += item.price;
+                break;
+            case 'PSU':
+                psuName = item.name;
+                buildPrice += item.price;
+                break;
+            case 'CASE':
+                caseName = item.name;
+                buildImg = item.imgURL;
+                buildPrice += item.price;
+                break;
+        }
+    }
+
+    console.log(moboName);
+    console.log(cpuName);
+    console.log(gpuName);
+    console.log(memoryName);
+    console.log(storageName);
+    console.log(fanName);
+    console.log(psuName);
+    console.log(caseName);
+
+    const newBuild = new ComputerBuilds({
+        name: req.body.name,
+        imgURL: buildImg,
+        category: req.body.category,
+        price: buildPrice,
+        author: req.user.username,
+        mobo: moboName,
+        cpu: cpuName,
+        gpu: gpuName,
+        memory: memoryName,
+        storage: storageName,
+        fan: fanName,
+        psu: psuName,
+        housing: caseName
+    });
+    console.log(newBuild);
+
+    await newBuild.save();
+    res.redirect(`/builds/${newBuild._id}`);
+
 }));
 
 app.get('/contact', (req, res) => {

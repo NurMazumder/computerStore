@@ -10,6 +10,9 @@ const orderSchema = new Schema({
         type: mongoose.SchemaTypes.ObjectId,
         required: true
     }],
+    containsBuild: [{
+        type: mongoose.SchemaTypes.ObjectId,
+    }],
     total: {
         type: Number,
         required: true

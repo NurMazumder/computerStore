@@ -4,7 +4,9 @@
 
     <% let types={ motherboard: [], CPU: [], FAN: [], PSU: [], MEMORY: [], STORAGE: [], GPU: [], CASE: [], OPERATING:
         [], MONITOR: [] }; %>
-
+        <% if (currentUser && currentUser.role==='admin' ) { %>
+            <a class="nav-link" href="/computerItems/new">Add Product</a>
+        <% } %>    
         <% for (let item of computerItems) { %>
             <% types[item.type].push(item); %>
                 <% } %>
