@@ -48,7 +48,7 @@
     <form action="/checkout">
         <% if(!incompatibility) { %>
         <% let containsBuild = containsMobo && containsCPU && containsGPU && containsMemory && containsStorage && containsFan && containsPSU && containsCase; %>
-        <% if(!containsBuild){ %>
+        <% if(!containsBuild && !prebuilt){ %>
             Remaining items needed to create a build:
             <br>
             <% if(!containsMobo){ %>
@@ -76,8 +76,13 @@
                 * Case
                 <br>
             <% } %>
+            Or, consider choosing one of our premade builds.
+            <br>
+        <% } else if (prebuilt) { %>
+            Your cart contains a premade PC build.
+            <br>
         <% } else { %>
-            Your item contains a compatible PC build!
+            Your cart contains a compatible PC build!
             <br>
         <% } %>
         

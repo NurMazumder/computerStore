@@ -414,9 +414,9 @@ app.post('/builds/:id/reviews', catchAsync(async (req, res) => {
         req.flash('error', 'Bad language detected. You have been issued warning(s).');
     }
     review.body = filteredBody;
-    computerItem.reviews.push(review);
+    computerBuild.reviews.push(review);
     await review.save();
-    await computerItem.save();
+    await computerBuild.save();
     res.redirect(`/builds/${computerBuild._id}`);
 }));
 
@@ -447,6 +447,7 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
     var containsPSU = false;
     var containsCase = false;
     const buildItems = [];
+    var prebuilt = false;
 
     var moboBrand;
     var cpuBrand;
@@ -505,6 +506,7 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
         }
         else if(await ComputerBuilds.findById(userCart.items[i]) !== null){ // item is a build
             item = await ComputerBuilds.findById(userCart.items[i]);
+            prebuilt = true;
         }
         itemList.push(item);
     }
@@ -523,7 +525,7 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
     await userCart.save();
 
     console.log(userCart.containsBuild);
-    res.render('Order/cart', { itemList, incompatibility, containsMobo, containsCPU, containsGPU, containsMemory, containsStorage, containsFan, containsPSU, containsCase });
+    res.render('Order/cart', { itemList, incompatibility, prebuilt, containsMobo, containsCPU, containsGPU, containsMemory, containsStorage, containsFan, containsPSU, containsCase });
 }));
 
 app.post('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
@@ -640,10 +642,10 @@ app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     console.log(newOrder);
     await newOrder.save();
 
-//    userCart.total = 0; // reset user's cart
-//    userCart.items = [];
-//    userCart.containsBuild = [];
-//    await userCart.save();
+    userCart.total = 0; // reset user's cart
+    userCart.items = [];
+    userCart.containsBuild = [];
+    await userCart.save();
 
     res.redirect(`/order/${newOrder._id}`);
 }));
@@ -654,8 +656,24 @@ app.get('/order/:id', isLoggedIn, catchAsync(async(req, res) => {
     console.log({id});
     const thisOrder = await Order.findById(id);
     console.log(thisOrder);
-    
-    res.render('Order/order', { thisOrder });
+    const orderItems = [];
+
+    const premades = [];
+    for(let itemID of thisOrder.order){
+        var item;
+        if(await ComputerItems.findById(itemID) !== null){ // item is a product
+            item = await ComputerItems.findById(itemID);
+            orderItems.push(item);
+        }
+        if(await ComputerBuilds.findById(itemID) !== null){ // item is a build
+            item = await ComputerBuilds.findById(itemID);
+            orderItems.push(item);
+            premades.push(item);
+        }
+    }
+    console.log(orderItems);
+    console.log(premades);
+    res.render('Order/order', { thisOrder, orderItems, premades });
 }));
 
 app.post('/order/buildFromOrder/:id', isLoggedIn, catchAsync(async(req, res) => {

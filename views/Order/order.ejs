@@ -13,7 +13,7 @@
     <h1>THANK YOU!</h1>
     <h2>ORDER NUMBER: <%= thisOrder._id %></h2>
     <h2>YOUR ITEMS:</h2>
-    <% for(let item of thisOrder.order) { %>
+    <% for(let item of orderItems) { %>
         <div class="col-md-3">
             <div class="card mb-4">
                 <div class="card-image">
@@ -34,28 +34,75 @@
             <h2> ORDER TOTAL: $<%= thisOrder.total %> </h2>
         </div>
     </div>
+    <% if(thisOrder.containsBuild.length > 0) { %>
+        Your order contains a computer build! Would you like to post it to the website?
     <div class="card mb-4"> 
         <div class="card-body">
-            <% if(thisOrder.containsBuild.length > 0) { %>
-                Your order contains a computer build! Would you like to post it to the website?
                 <form action="/order/buildFromOrder/<%= thisOrder._id %>" method="POST">
                     <label for="name">Build name:</label>
                     <input type="name" class="form-control" id="name" name="name" required placeholder="Build name...">
                     <div class="mb-3">
                         <label for="category">Choose recommended category:</label>
                         <select name="category" id="category" class="form-control" required>
-                            <option>Category</option>
                             <option value="Budget">Budget</option>
-                            <option value="High-End">Premium</option>
+                            <option value="Premium">Premium</option>
                             <option value="Gaming">Gaming</option>
                             <option value="Business / Education">Business / Education</option>
                         </select>
                     </div>
                     <button class="btn btn-primary">Create Build</button>
                 </form>
-            <% } %>
         </div>
     </div>
+    <% } %>
+    <% if(premades.length > 0){ %>
+        Would you consider leaving a review for the following premade computer builds?
+        <% for (let computerBuild of premades) { %>
+        <div class="col-md-3">
+            <div class="card mb-4">
+
+                <div class="card-image">
+                    <img src="<%= computerBuild.imgURL %>"
+                        class="card-img-top img-fluid square-image"
+                        alt="<%= computerBuild.name %>">
+                </div>
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <%= computerBuild.name %>
+                    </h5>
+                </div>
+                <form action="/builds/<%= computerBuild._id %>/reviews" method="POST" novalidate
+                    class="mb-3 validated-form">
+                    <h2>Leave A Review</h2>
+
+                    <fieldset class="starability-basic">
+                        <legend>Rating:</legend>
+                        <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="0" checked
+                            aria-label="No rating." />Comment only
+                        <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+                        <label for="first-rate1" title="Terrible">1 star</label>
+                        <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+                        <label for="first-rate2" title="Not good">2 stars</label>
+                        <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+                        <label for="first-rate3" title="Average">3 stars</label>
+                        <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+                        <label for="first-rate4" title="Very good">4 stars</label>
+                        <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+                        <label for="first-rate5" title="Amazing">5 stars</label>
+                    </fieldset>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="body">Comment</label>
+                        <textarea class="form-control" name="review[body]" id="body" cols="30" rows="3"
+                            required></textarea>
+                    </div>
+                    <button class="btn btn-success">Submit</button>
+                </form>
+            </div>
+        </div>
+    <% } %>
+    <% } %>
+
     <a class="nav-link" href="/">Return to Homepage</a>
 </body>
 
