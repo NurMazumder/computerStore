@@ -12,12 +12,15 @@ const flash = require('connect-flash');
 const ComputerItems = require('./models/computerStore');
 const ComputerBuilds = require('./models/ComputerBuild');
 const Cart = require('./models/cartModel');
-const CustomerService = require('./models/customerService');
 const passport = require('passport');
 const LocalStrategy = require('passport-local'); // <-- here
 const User = require('./models/user');
 const { isLoggedIn } = require('./middleware');
-const user = require('./models/user');
+const Order = require('./models/orderModel');
+const app = express();
+
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
@@ -29,7 +32,7 @@ db.once("open", () => {
     console.log("Database Connected");
 })
 
-const app = express();
+//const app = express();
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -67,7 +70,7 @@ app.use((req, res, next) => {
     res.locals.error = req.flash('error');
     next();
 });
-app.use(express.static(path.join(__dirname, 'public')));
+
 
 // Function to fetch the latest computer builds
 async function getLatestBuilds() {
@@ -96,6 +99,12 @@ app.get('/', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+// Example code to update the computer builds and re-render the home page every 10 seconds
+setInterval(async () => {
+    const topBuilds = await getLatestBuilds();
+    io.emit('updateComputerBuilds', topBuilds);
+}, 10000);
 
 // computer Items
 
@@ -604,8 +613,6 @@ app.get('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     }
     res.render('Order/checkout', { itemList });
 }));
-
-const Order = require('./models/orderModel');
 
 app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     const userCart = await Cart.findOne({userID: req.user._id});

@@ -10,8 +10,8 @@
     </head>
 
     <body>
-        <h1>TOP BUILDS</h1>
-        <div class="row mt-5">
+        <h1>Top Builds</h1>
+        <div class="row">
             <% computerBuild.sort((a, b)=> {
                 const aAvgRating = a.reviews.reduce((acc, cur) => acc + cur.rating, 0) / a.reviews.length;
                 const bAvgRating = b.reviews.reduce((acc, cur) => acc + cur.rating, 0) / b.reviews.length;
