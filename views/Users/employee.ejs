@@ -14,9 +14,11 @@
               <form action="/demote/<%= user._id %>" method="POST">
                 <button type="submit" class="btn btn-light">Demote</button>
               </form>
+              <% if (user.paygrade <= -2) { %>
               <form action="/customer/<%= user._id %>?_method=DELETE" method="POST">
                 <button type="submit" class="btn btn-light">Fire</button>
               </form>
+              <% } %>
             </div>
           </div>
         </div>
