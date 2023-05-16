@@ -27,6 +27,12 @@ const UserSchema = new Schema({
     wallet: {
         type: Number,
         default: '0'
+    },
+    paygrade: {
+        type: Number
+    },
+    coupons: {
+        type: Number
     }
 });
 

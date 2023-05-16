@@ -318,6 +318,24 @@ app.delete('/employee/:id', isLoggedIn, catchAsync(async (req, res) => {
     res.redirect('/employee');
   }));
 
+app.get("/award/:id", isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const thisUser = await User.findById(id);
+    var redirectLink;
+    if(thisUser.role === 'employee'){
+        thisUser.paygrade = (thisUser.paygrade || 0) + 1;
+        redirectLink = '/employee';
+    }
+    else if(thisUser.role === 'customer'){
+        thisUser.coupons = (thisUser.paygrade || 0) + 1;
+        redirectLink = '/customer';;
+    }
+    thisUser.compliment = 0;
+    await thisUser.save();
+    req.flash('success', "User rewarded.");
+    res.redirect(redirectLink);
+}))
+
   // PC builder 
 
 app.get('/builds', async (req, res) => {
@@ -436,6 +454,19 @@ app.delete('/builds/:id/reviews/:reviewId', isLoggedIn, catchAsync(async (req, r
     await ComputerBuilds.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
     await Review.findByIdAndDelete(reviewId);
     res.redirect(`/builds/${id}`);
+}))
+
+app.post("/builds/:id/compliment", catchAsync(async (req, res) => {
+   const {id} = req.params;
+   const complimentedBuild = await ComputerBuilds.findById(id);
+   console.log(complimentedBuild);
+   const awardedUser = await User.findByUsername(complimentedBuild.author);
+   console.log(awardedUser);
+   awardedUser.compliment = (awardedUser.compliment || 0) + 1;
+   console.log(awardedUser.compliment);
+   await awardedUser.save();
+   req.flash("success", "Thank you for your feedback!");
+   res.redirect(`/builds/${id}`);
 }))
 
   
@@ -617,8 +648,8 @@ app.get('/checkout', isLoggedIn, catchAsync(async(req, res) => {
 app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     const userCart = await Cart.findOne({userID: req.user._id});
     if(req.user.wallet < userCart.total){
-        req.user.warn++;
-        await req.user.save()
+        req.user.warn = (req.user.warn || 0) + 1;
+        await req.user.save();
         req.flash('error', 'Insufficient balance. Please add more money before placing the order. You have been issued a warning.');
         return res.redirect(`/account/${req.user._id}`);
     }

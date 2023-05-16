@@ -3,7 +3,7 @@
     
 
     <% let types= { Budget: [], Premium: [], Gaming: [], Business: [] }; %>
-        <% if (currentUser && currentUser.role==='admin' ) { %>
+        <% if (currentUser && (currentUser.role==='admin' || currentUser.role ==='employee') ) { %>
             <a class="nav-link" href="/builds/new">Create Build</a>
         <% } %>    
         <% for (let item of computerBuild) { %>

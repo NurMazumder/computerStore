@@ -37,7 +37,14 @@
                                                 <%= computerBuild.housing %>
                 </h1>
                 <div class="d-flex">
-                    <% if (currentUser && (currentUser.role==='admin' || currentUser.role==='customer')) { %>
+                    <% if (currentUser) { %>
+                        <form action="/builds/<%= computerBuild._id %>/compliment" method="POST">
+                            <button class="btn btn-success">Compliment</button>
+                        </form>
+                        <% } %>
+                </div>
+                <div class="d-flex">
+                    <% if (currentUser && (currentUser.role==='admin' || currentUser.role==='employee' || currentUser.role==='customer')) { %>
                         <form action="/builds/<%= computerBuild._id %>?_method=DELETE" method="POST">
                             <button class="btn btn-danger">Delete</button>
                         </form>
