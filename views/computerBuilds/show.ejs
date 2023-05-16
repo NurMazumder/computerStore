@@ -44,7 +44,7 @@
                         <% } %>
                 </div>
                 <div class="d-flex">
-                    <% if (currentUser && (currentUser.role==='admin' || currentUser.role==='employee' || currentUser.role==='customer')) { %>
+                    <% if (currentUser && (currentUser.role==='admin' || currentUser.role==='employee')) { %>
                         <form action="/builds/<%= computerBuild._id %>?_method=DELETE" method="POST">
                             <button class="btn btn-danger">Delete</button>
                         </form>

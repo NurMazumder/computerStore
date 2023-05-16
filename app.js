@@ -296,16 +296,28 @@ app.get('/account/:id', isLoggedIn,catchAsync(async (req, res) => {
     res.render('Users/account', { user });
 }));
 
-app.put('/account/:id', isLoggedIn, catchAsync(async (req, res) => {
+// Route handler for depositing money
+app.put('/account/:id/deposit', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     const user = await User.findById(id);
     const newAmount = parseInt(req.body.user.wallet);
     const updatedWallet = user.wallet + newAmount;
     user.wallet = updatedWallet;
     await user.save();
-    req.flash('success', 'Successfully updated');
+    req.flash('success', 'Successfully deposited money');
     res.redirect(`/account/${id}`);
-  }));
+}));
+
+// Route handler for updating user information
+app.put('/account/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { username, email } = req.body.user;
+
+    const user = await User.findByIdAndUpdate(id, { username, email }, { new: true });
+
+    req.flash('success', 'Successfully updated user info');
+    res.redirect(`/account/${id}`);
+}));
 
 
 app.get('/employee',isLoggedIn, catchAsync(async (req, res) => {
@@ -374,7 +386,7 @@ app.post('/builds', isLoggedIn, async(req, res) => {
         req.flash('error', 'Incompatibilities detected: motherboard and CPU are incompatible. Please try a different combination.');
         return res.redirect(`/builds/new`);
     }
-    if(gpu[0].brand.toLowerCase() !== 'nvidia' && gpu[0].brand.toLowerCase() !== 'asrock' && mobo[0].brand.toLowerCase() !== gpu[0].brand.toLowerCase()){
+    if(mobo[0].brand.toLowerCase() !== gpu[0].brand.toLowerCase()){
         req.flash('error', 'Incompatibilities detected: motherboard and GPU are incompatible. Please try a different combination.');
         return res.redirect(`/builds/new`);
     }
@@ -560,15 +572,15 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
         userCart.total += item.price;
     }
 
-    if(containsMobo && containsCPU && (moboBrand === 'MSI' && cpuBrand === 'INTEL') || (moboBrand !== 'MSI' && cpuBrand !== 'INTEL')){
+    if(containsMobo && containsCPU && (moboBrand === 'ASUS' && cpuBrand !== 'INTEL') || (moboBrand !== 'ASUS' && cpuBrand === 'INTEL')){        
         incompatibility = true;
     }
-    if(containsMobo && containsGPU && moboBrand.toLowerCase() !== 'nvidia'  && gpuBrand.toLowerCase() !== 'asrock' && (moboBrand.toLowerCase() !== gpuBrand.toLowerCase())){
+    if(containsMobo && containsGPU && (moboBrand.toLowerCase() !== gpuBrand.toLowerCase())){
         incompatibility = true;
     }
 
     if(userCart.items.length === 0){
-        incompatibility
+        incompatibility = false;
     }
 
     if(containsMobo && containsCPU && containsGPU && containsMemory && containsStorage && containsFan && containsPSU && containsCase && buildComponents === 0)

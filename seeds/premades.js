@@ -100,7 +100,7 @@ module.exports = [
         housing: "Lian Li O11 Dynamic EVO",
         price: 3996,
         imgURL: "https://m.media-amazon.com/images/I/41EN5WjnfyL.jpg",
-        name: "Asus Premium Build",
+        name: "NVIDIA Premium Build",
         category: "Premium",
         author: "employee",
     },
