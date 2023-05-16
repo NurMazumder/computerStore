@@ -12,6 +12,7 @@
 <body>
     <h1>THANK YOU!</h1>
     <h2>ORDER NUMBER: <%= thisOrder._id %></h2>
+    <h2>ORDER PLACED: <%= thisOrder.placed %></h2>
     <h2>YOUR ITEMS:</h2>
     <% for(let item of orderItems) { %>
         <div class="col-md-3">
@@ -32,6 +33,7 @@
     <div class="card mb-4"> 
         <div class="card-body">
             <h2> ORDER TOTAL: $<%= thisOrder.total %> </h2>
+            <h2> CURRENT ORDER STATUS: <%= thisOrder.status %> </h2>
         </div>
     </div>
     <% if(thisOrder.containsBuild.length > 0) { %>

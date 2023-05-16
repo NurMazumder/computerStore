@@ -745,6 +745,16 @@ app.get('/order/:id', isLoggedIn, catchAsync(async(req, res) => {
     res.render('Order/order', { thisOrder, orderItems, premades });
 }));
 
+app.post("/account/view-order", isLoggedIn, catchAsync(async(req, res) => {
+    const orderNumber = req.body.order;
+    console.log(orderNumber);
+    if(await Order.findById(orderNumber) !== null){ // item is a product
+        return res.redirect(`/order/${orderNumber}`);
+    }
+    req.flash('error', 'Order not found with this number.');
+    res.redirect(`/account/${req.user._id}`);
+}))
+
 app.post('/order/buildFromOrder/:id', isLoggedIn, catchAsync(async(req, res) => {
     const {id} = req.params;
     const thisOrder = await Order.findById(id);

@@ -21,6 +21,14 @@
                     <button class="btn btn-primary">$Deposit</button>
                 </form>
                 <% } %>
+                <form action="/account/view-order" method="POST" novalidate class="validated-form">
+                    <div class="mb-3">
+                        <label for="order" class="form-label">Check order</label>
+                        <input type="text" class="form-control" id="order" name="order"
+                            placeholder="Order number..." required>
+                    </div>
+                    <button class="btn btn-primary">Check order</button>
+                </form>
                     <form action="/account/<%= user._id %>?_method=PUT" method="POST" novalidate class="validated-form">
                         <h2>Change Personal Info</h2>
                         <div class="mb-3">
