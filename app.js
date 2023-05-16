@@ -21,7 +21,7 @@ const app = express();
 
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
-
+ 
 
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
 
@@ -284,6 +284,7 @@ app.get('/customer',isLoggedIn, catchAsync(async (req, res) => {
 app.delete('/customer/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     await User.findByIdAndDelete(id);
+    await Cart.deleteOne({userID: id});
     res.redirect('/customer');
   }));
 
@@ -315,6 +316,7 @@ app.get('/employee',isLoggedIn, catchAsync(async (req, res) => {
 app.delete('/employee/:id', isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     await User.findByIdAndDelete(id);
+    await Cart.deleteOne({userID: id});
     res.redirect('/employee');
   }));
 
@@ -476,6 +478,9 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
     // get actual store objects from IDs in cart object
     const userCart = await Cart.findOne({userID: req.user._id}); // find cart of user
 
+    userCart.couponsApplied = 0;
+    userCart.total = 0;
+
     const itemList = [];
 
     var buildComponents = 8;
@@ -550,6 +555,7 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
             prebuilt = true;
         }
         itemList.push(item);
+        userCart.total += item.price;
     }
 
     if(containsMobo && containsCPU && (moboBrand === 'ASUS' && cpuBrand !== 'INTEL') || (moboBrand !== 'ASUS' && cpuBrand === 'INTEL')){
@@ -586,7 +592,6 @@ app.post('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
     console.log("Before:",userCart.items);
     for(let i = 0; i < quantity; i++){ // add desired quantity of item
         userCart.items.push(id); // convert to string
-        userCart.total += item.price;
     }
     await userCart.save();
     
@@ -617,7 +622,12 @@ app.put('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
     userCart.items.splice(itemIndex, 1);
     console.log("Cart after:",userCart.items);
     console.log("Total before:", userCart.total);
-    userCart.total -= item.price;
+    if(userCart.total - item.price < 0){
+        userCart.total = 0;
+    }
+    else{
+        userCart.total -= item.price;
+    }
     console.log("Total after:", userCart.total);
     await userCart.save();
 
@@ -626,6 +636,7 @@ app.put('/cart/:id', isLoggedIn, catchAsync(async (req, res) => {
 }));
 
 app.get('/checkout', isLoggedIn, catchAsync(async(req, res) => {
+    const thisUser = req.user;
     const userCart = await Cart.findOne({userID: req.user._id});
     if(userCart.items.length < 1){
         req.flash('error', 'Your cart is empty!');
@@ -642,7 +653,7 @@ app.get('/checkout', isLoggedIn, catchAsync(async(req, res) => {
         }
         itemList.push(item);
     }
-    res.render('Order/checkout', { itemList });
+    res.render('Order/checkout', { itemList, userCart, thisUser });
 }));
 
 app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
@@ -676,7 +687,9 @@ app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
         address: orderAddress,
         order: itemList,
         total: userCart.total,
-        containsBuild: userCart.containsBuild
+        containsBuild: userCart.containsBuild,
+        placed: new Date(),
+        status: "Pending"
     })
     console.log(newOrder);
     await newOrder.save();
@@ -684,10 +697,27 @@ app.post('/checkout', isLoggedIn, catchAsync(async(req, res) => {
     userCart.total = 0; // reset user's cart
     userCart.items = [];
     userCart.containsBuild = [];
+    if(userCart.couponsApplied && userCart.couponsApplied > 0){
+        req.user.coupons -= userCart.couponsApplied;
+    }
+    await req.user.save();
     await userCart.save();
 
     res.redirect(`/order/${newOrder._id}`);
 }));
+
+app.get('/applycoupon', isLoggedIn, catchAsync(async(req, res) => {
+    const userCart = await Cart.findOne({userID: req.user._id});
+    console.log("Before coupon:", userCart.total);
+    userCart.total = Math.round(userCart.total * 0.9);
+    console.log("After coupon:", userCart.total);
+    userCart.couponsApplied = (userCart.couponsApplied || 0) + 1;
+    console.log(userCart.couponsApplied);
+    await userCart.save();
+
+    req.flash("success", "Coupon applied.");
+    res.redirect("/checkout");
+}))
 
 
 app.get('/order/:id', isLoggedIn, catchAsync(async(req, res) => {

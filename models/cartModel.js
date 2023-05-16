@@ -18,6 +18,7 @@ const cartSchema = new Schema({
         type: mongoose.Types.ObjectId,
         default: null
     }],
+    couponsApplied: Number
 });
 
 module.exports = mongoose.model('Cart', cartSchema);

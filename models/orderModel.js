@@ -17,6 +17,14 @@ const orderSchema = new Schema({
         type: Number,
         required: true
     },
+    placed:{
+        type: Date,
+        required: true
+    },
+    status: {
+        type: String,
+        required: true
+    }
 });
 
 module.exports = mongoose.model('Order', orderSchema);

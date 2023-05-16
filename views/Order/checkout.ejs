@@ -16,9 +16,6 @@
     <% let states_list = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'] %>
 
     <body>
-        <% let total = 0 %>
-        <% let shipping = 0 %>
-        <% let tax = 0 %>
         <h2>YOUR ITEMS</h2>
         <% for(let item of itemList) { %>
             <div class="col-md-3">
@@ -38,8 +35,15 @@
                         </div>
                     </div>
             </div>
-            <% total += item.price %>
         <% } %> 
+
+        <% if (thisUser.coupons && thisUser.coupons > 0 && thisUser.coupons > userCart.couponsApplied) { %>
+            <form action="/applycoupon" method="GET">
+                You have a coupon! Would you like to use it to get 10% off your order? <br>
+                <button class="btn btn-primary">Yes</button>
+            </form>
+            <% } %>
+
         <h2>SHIPPING ADDRESS</h2>
         <div class="container">
             <form action="/checkout" method="POST" novalidate class="validated-form">
@@ -72,7 +76,7 @@
 
             <div class="card mb-4"> 
                 <div class="card-body">
-                    <h2> ORDER TOTAL: $<%= total + shipping + tax %> </h2>
+                    <h2> ORDER TOTAL: $<%= userCart.total %> </h2>
                 </div>
             </div>
                 <button class="btn btn-primary">Place order</button>
