@@ -10,6 +10,10 @@
             <div class="card-body">
               <h5 class="card-title"> <%= user.username %> </h5>
               <p class="card-text">Warnings: <%= user.warn %></p>
+              <p class="card-text">Grade: <%= user.paygrade %></p>
+              <form action="/demote/<%= user._id %>" method="POST">
+                <button type="submit" class="btn btn-light">Demote</button>
+              </form>
               <form action="/customer/<%= user._id %>?_method=DELETE" method="POST">
                 <button type="submit" class="btn btn-light">Fire</button>
               </form>

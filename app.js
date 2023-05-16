@@ -333,6 +333,16 @@ app.delete('/employee/:id', isLoggedIn, catchAsync(async (req, res) => {
     res.redirect('/employee');
   }));
 
+  app.post('/demote/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const thisUser = await User.findById(id);
+    thisUser.warn = 0;
+    thisUser.paygrade = (thisUser.paygrade || 0) - 1;
+    await thisUser.save(); 
+    req.flash("success", "Employee demoted");
+    res.redirect('/employee');
+  }));
+
 app.get("/award/:id", isLoggedIn, catchAsync(async (req, res) => {
     const { id } = req.params;
     const thisUser = await User.findById(id);
