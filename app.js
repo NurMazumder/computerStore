@@ -91,9 +91,10 @@ app.get('/', async (req, res) => {
     try {
         // Fetch the latest computer builds
         const topBuilds = await getLatestBuilds();
+        const latestItems = await ComputerItems.find().sort({ _id: -1 }).limit(4);
 
         // Render the home page with the latest computer builds
-        res.render('home', { computerBuild: topBuilds });
+        res.render('home', { computerBuild: topBuilds, latestItems });
     } catch (err) {
         console.log(err);
         res.status(500).send('Internal Server Error');
