@@ -45,6 +45,7 @@
                             <% if (currentUser && currentUser.role==='admin' ||  currentUser.role==='employee') { %>
                             <a class="dropdown-item" href="/manage">Application</a>
                             <a class="dropdown-item" href="/customer">Customer Management</a>
+                            <a class="dropdown-item" href="/incoming-orders">Incoming Orders</a>
                             <% if (currentUser && currentUser.role==='admin') { %>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="/employee">Employee Management</a>

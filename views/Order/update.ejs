@@ -1,0 +1,19 @@
+<% layout('layout/boilerplate') %>
+
+<h1>FULFILL ORDER</h1>
+
+<form action="/update/<%= thisOrder._id %>?_method=PUT" method="POST">
+  <input type="hidden" name="_method" value="PUT">
+  <div class="form-group">
+    <h2> Order #<%= thisOrder._id %></h2>
+    <label for="status">Status:</label>
+    <select id="status" name="status" class="form-control">
+      <option value="Pending">Pending</option>
+      <% if (currentUser && currentUser.role==='admin') { %>
+      <option value="Shipped">Shipped</option>
+      <% } %>
+      <option value="Canceled">Canceled</option>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary mt-3">Update Role</button>
+</form>

@@ -1,0 +1,19 @@
+<% layout('layout/boilerplate') %>
+
+<div class="container">
+    <h1 class="my-4">INCOMING ORDERS</h1>
+    <div class="row">
+      <% for(let order of orders) {
+            if (order.status === 'Pending') { %>
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"> <%= order._id %> </h5>
+              <h5 class="card-title"> <%= order.status %> </h5>
+              <a href="/update/<%= order._id %>" class="btn btn-primary mt-3">Update</a>
+            </div>
+          </div>
+        </div>
+      <% } } %>
+    </div>
+  </div>

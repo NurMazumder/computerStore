@@ -755,6 +755,24 @@ app.post("/account/view-order", isLoggedIn, catchAsync(async(req, res) => {
     res.redirect(`/account/${req.user._id}`);
 }))
 
+app.get('/incoming-orders',isLoggedIn, catchAsync(async (req, res) => {
+    const orders = await Order.find({});
+    res.render('Order/fulfill', { orders })
+}))
+
+app.get('/update/:id', isLoggedIn,catchAsync(async (req, res) => {
+    const thisOrder = await Order.findById(req.params.id);
+    res.render('Order/update', { thisOrder });
+}));
+
+app.put('/update/:id', isLoggedIn, catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const thisOrder = await Order.findByIdAndUpdate(id, { ...req.body });
+    await thisOrder.save();
+    req.flash('success', 'Successfully updated');
+    res.redirect('/incoming-orders');
+}));
+
 app.post('/order/buildFromOrder/:id', isLoggedIn, catchAsync(async(req, res) => {
     const {id} = req.params;
     const thisOrder = await Order.findById(id);
