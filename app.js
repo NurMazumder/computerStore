@@ -91,7 +91,7 @@ app.get('/', async (req, res) => {
     try {
         // Fetch the latest computer builds
         const topBuilds = await getLatestBuilds();
-        const latestItems = await ComputerItems.find().sort({ _id: -1 }).limit(4);
+        const latestItems = await ComputerItems.find().sort({ _id: -1 }).limit();
 
         // Render the home page with the latest computer builds
         res.render('home', { computerBuild: topBuilds, latestItems });
@@ -370,11 +370,11 @@ app.post('/builds', isLoggedIn, async(req, res) => {
     console.log(gpu[0].brand);
 
     // detect incompatibility
-    if((mobo[0].brand === 'ASUS' && cpu[0].brand !== 'INTEL') || (mobo[0].brand !== 'ASUS' && cpu[0].brand === 'INTEL')){
+    if((mobo[0].brand === 'MSI' && cpu[0].brand === 'INTEL') || (mobo[0].brand !== 'MSI' && cpu[0].brand !== 'INTEL')){
         req.flash('error', 'Incompatibilities detected: motherboard and CPU are incompatible. Please try a different combination.');
         return res.redirect(`/builds/new`);
     }
-    if((mobo[0].brand.toLowerCase() !== gpu[0].brand.toLowerCase())){
+    if(gpu[0].brand.toLowerCase() !== 'nvidia' && gpu[0].brand.toLowerCase() !== 'asrock' && mobo[0].brand.toLowerCase() !== gpu[0].brand.toLowerCase()){
         req.flash('error', 'Incompatibilities detected: motherboard and GPU are incompatible. Please try a different combination.');
         return res.redirect(`/builds/new`);
     }
@@ -556,14 +556,19 @@ app.get('/cart', isLoggedIn, catchAsync(async(req, res) => {
             prebuilt = true;
         }
         itemList.push(item);
+        console.log(item);
         userCart.total += item.price;
     }
 
-    if(containsMobo && containsCPU && (moboBrand === 'ASUS' && cpuBrand !== 'INTEL') || (moboBrand !== 'ASUS' && cpuBrand === 'INTEL')){
+    if(containsMobo && containsCPU && (moboBrand === 'MSI' && cpuBrand === 'INTEL') || (moboBrand !== 'MSI' && cpuBrand !== 'INTEL')){
         incompatibility = true;
     }
-    if(containsMobo && containsGPU && (moboBrand.toLowerCase() !== gpuBrand.toLowerCase())){
+    if(containsMobo && containsGPU && moboBrand.toLowerCase() !== 'nvidia'  && gpuBrand.toLowerCase() !== 'asrock' && (moboBrand.toLowerCase() !== gpuBrand.toLowerCase())){
         incompatibility = true;
+    }
+
+    if(userCart.items.length === 0){
+        incompatibility
     }
 
     if(containsMobo && containsCPU && containsGPU && containsMemory && containsStorage && containsFan && containsPSU && containsCase && buildComponents === 0)

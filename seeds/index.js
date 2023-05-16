@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const ComputerItems = require('../models/computerStore');
+const ComputerBuilds = require('../models/computerBuild');
 mongoose.connect('mongodb://127.0.0.1:27017/computer-store');
 
 const db = mongoose.connection;
@@ -9,6 +10,7 @@ db.once("open", () => {
 });
 
 const components = require('./components');
+const premades = require('./premades');
 
 const seedDB = async () => {
     try {
@@ -20,6 +22,25 @@ const seedDB = async () => {
                 brand: comp.brand,
                 price: comp.price,
                 imgURL: comp.imgURL
+            });
+            await item.save();
+        }
+        await ComputerBuilds.deleteMany({});
+        for (let build of premades) {
+            const item = new ComputerBuilds({
+                mobo: build.mobo,
+                cpu: build.cpu,
+                gpu: build.gpu,
+                memory: build.memory,
+                storage: build.storage,
+                fan: build.fan,
+                psu: build.psu,
+                housing: build.housing,
+                price: build.price,
+                imgURL: build.imgURL,
+                name: build.name,
+                category: build.category,
+                author: build.author
             });
             await item.save();
         }
